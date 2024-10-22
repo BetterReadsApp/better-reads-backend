@@ -10,9 +10,11 @@ router = APIRouter(tags=["Books"])
 def get_books(session: Session = Depends(get_session)):
     return session.exec(select(Book)).all()
 
+
 @router.get("/books/{book_id}")
 def get_book(book_id, session: Session = Depends(get_session)):
     return get_book_by_id(book_id, session)
+
 
 @router.post("/books")
 def create_book(book_form: BookForm, session: Session = Depends(get_session)):

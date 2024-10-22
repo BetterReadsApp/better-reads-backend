@@ -5,3 +5,4 @@ ruff==0.6.7
 sqlmodel==0.0.22
 psycopg2-binary==2.9.9
 alembic==1.13.3
+bcrypt==4.2.0
