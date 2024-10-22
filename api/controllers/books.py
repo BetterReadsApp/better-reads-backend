@@ -1,25 +1,19 @@
 from fastapi import APIRouter, Depends
-from sqlmodel import Session
-from ..db import get_session
-from ..model.book import BookForm
+from sqlmodel import Session, select
+from ..db import get_session, get_book_by_id
+from ..model.book import BookForm, Book
 
 router = APIRouter(tags=["Books"])
 
 
 @router.get("/books")
 def get_books(session: Session = Depends(get_session)):
-    # session.add(user)
-    # session.commit()
-    # session.refresh(user)
-    return [
-        {
-            "title": "It",
-            "summary": "Ohhh scary...",
-            "author": "Stephen King",
-            "pages": 1116,
-            "publication_date": "September 15, 1986",
-        }
-    ]
+    return session.exec(select(Book)).all()
+
+
+@router.get("/books/{book_id}")
+def get_book(book_id, session: Session = Depends(get_session)):
+    return get_book_by_id(book_id, session)
 
 
 @router.post("/books")
