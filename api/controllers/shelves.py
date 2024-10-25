@@ -1,6 +1,6 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Header
-from sqlmodel import Session
+from sqlmodel import Session, select
 from ..db import get_session, user_exists_by_field
 from ..model.shelf import ShelfForm, Shelf
 
@@ -24,3 +24,7 @@ def create_shelf(
     session.refresh(shelf)
 
     return shelf
+
+@router.get("/shelves")
+def get_shelves(session: Session = Depends(get_session)):
+    return session.exec(select(Shelf)).all()
