@@ -21,7 +21,7 @@ def get_session():
 def get_user_by_field(field_name: str, value: str, session: Session):
     query = select(User).where(getattr(User, field_name) == value)
     user = session.exec(query).first()
-    if user is None:
+    if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
@@ -29,7 +29,7 @@ def get_user_by_field(field_name: str, value: str, session: Session):
 def get_book_by_id(book_id: int, session: Session):
     query = select(Book).where(Book.id == book_id)
     book = session.exec(query).first()
-    if book is None:
+    if not book:
         raise HTTPException(status_code=404, detail="Book not found")
     return book
 

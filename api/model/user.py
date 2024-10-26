@@ -3,18 +3,25 @@ from sqlmodel import SQLModel, Field
 
 
 class UserBase(SQLModel):
+    name: str
+    last_name: str
+    email: str
+
+
+class UserFormRegister(UserBase):
+    password: str
+
+
+class UserFormLogin(SQLModel):
     email: str
     password: str
 
 
-class UserForm(UserBase):
-    name: str
-    last_name: str
-
-
-class User(UserForm, table=True):
+class User(UserFormRegister, table=True):
     __tablename__ = "users"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    # name: Optional[str] = Field(default=None)
-    # last_name: Optional[str] = Field(default=None)
+
+
+class UserPublic(UserBase):
+    id: int
