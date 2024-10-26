@@ -9,4 +9,6 @@ class ShelfForm(SQLModel):
 class Shelf(ShelfForm, table=True):
     __tablename__ = "shelves"
 
-    user_id: Optional[int] = Field(default=None, foreign_key="users.id")
+    user_id: Optional[int] = Field(
+        default=None, foreign_key="users.id", primary_key=True
+    )
