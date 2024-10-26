@@ -18,8 +18,8 @@ def get_session():
         yield session
 
 
-def get_user_by_email(email: str, session: Session):
-    query = select(User).where(User.email == email)
+def get_user_by_field(field_name: str, value: str, session: Session):
+    query = select(User).where(getattr(User, field_name) == value)
     user = session.exec(query).first()
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")

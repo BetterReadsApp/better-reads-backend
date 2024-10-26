@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import Session
-from ..db import get_session, get_user_by_email, user_exists_by_field
+from ..db import get_session, get_user_by_field, user_exists_by_field
 from ..model.user import UserForm, User, UserBase
 from ..model.shelf import Shelf
 import bcrypt
@@ -10,7 +10,7 @@ router = APIRouter(tags=["Auth"])
 
 @router.post("/login")
 def log_user(user_base: UserBase, session: Session = Depends(get_session)):
-    user = get_user_by_email(user_base.email, session)
+    user = get_user_by_field("email", user_base.email, session)
 
     if not bcrypt.checkpw(
         user_base.password.encode("utf-8"), user.password.encode("utf-8")
@@ -47,3 +47,7 @@ def create_user(user_form: UserForm, session: Session = Depends(get_session)):
 def create_default_shelves(user_id: int) -> list[Shelf]:
     shelf_names = ["Currently Reading", "Read", "To Read"]
     return [Shelf(name=name, user_id=user_id) for name in shelf_names]
+
+@router.get("/users/{user_id}")
+def get_user(user_id, session: Session = Depends(get_session)):
+    return get_user_by_field("id", user_id, session)
