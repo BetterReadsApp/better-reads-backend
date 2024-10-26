@@ -37,20 +37,13 @@ def create_user(user_form: UserFormRegister, session: Session = Depends(get_sess
     )
     user_form.password = hashed_password.decode("utf-8")
     new_user = User.model_validate(user_form)
+    new_user.shelves = [
+        Shelf(name="To Read"),
+        Shelf(name="Currently Reading"),
+        Shelf(name="Read"),
+    ]
 
     session.add(new_user)
     session.commit()
     session.refresh(new_user)
-
-    shelves = create_default_shelves(new_user.id)
-
-    session.add_all(shelves)
-    session.commit()
-    session.refresh(new_user)
-
     return {"user_id": new_user.id}
-
-
-def create_default_shelves(user_id: int) -> list[Shelf]:
-    shelf_names = ["Currently Reading", "Read", "To Read"]
-    return [Shelf(name=name, user_id=user_id) for name in shelf_names]

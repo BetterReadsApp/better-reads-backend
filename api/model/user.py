@@ -1,5 +1,6 @@
-from typing import Optional
-from sqlmodel import SQLModel, Field
+from typing import Optional, List
+from sqlmodel import SQLModel, Field, Relationship
+from .shelf import Shelf, ShelfForm
 
 
 class UserBase(SQLModel):
@@ -21,6 +22,12 @@ class User(UserFormRegister, table=True):
     __tablename__ = "users"
 
     id: Optional[int] = Field(default=None, primary_key=True)
+    shelves: List[Shelf] = Relationship(back_populates="user")
+
+
+class UserPrivate(UserBase):
+    id: int
+    shelves: List[ShelfForm] = []
 
 
 class UserPublic(UserBase):
