@@ -4,10 +4,15 @@ from sqlmodel import Session, select
 from ..db import get_session, user_exists_by_field
 from ..model.shelf import ShelfForm, Shelf
 
-router = APIRouter(tags=["Shelves"])
+router = APIRouter(prefix="/shelves", tags=["Shelves"])
 
 
-@router.post("/shelves")
+@router.get("")
+def get_shelves(session: Session = Depends(get_session)):
+    return session.exec(select(Shelf)).all()
+
+
+@router.post("")
 def create_shelf(
     shelf_form: ShelfForm,
     session: Session = Depends(get_session),
@@ -24,7 +29,3 @@ def create_shelf(
     session.refresh(shelf)
 
     return shelf
-
-@router.get("/shelves")
-def get_shelves(session: Session = Depends(get_session)):
-    return session.exec(select(Shelf)).all()
