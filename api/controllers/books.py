@@ -34,24 +34,36 @@ def rate_book(
     auth: Annotated[int, Header()] = None,
 ):
     if not 1 <= value <= 5:
-        raise HTTPException(
-            status_code=400,
-            detail="Rating must be an integer between 1 and 5 (both included)",
-        )
+        raise HTTPException(status_code=400, detail="Rating must be an integer between 1 and 5")
 
     user = get_user_by_field("id", auth, session)
     book = get_book_by_id(book_id, session)
     query = (
         select(Rating).where(Rating.user_id == user.id).where(Rating.book_id == book.id)
     )
-    book_already_rated = session.exec(query).first() is not None
-    if book_already_rated:
-        raise HTTPException(status_code=400, detail="You've already rated this book")
+    existing_rating = session.exec(query).first()
 
-    times_rated = session.query(Rating).filter(Rating.book_id == book.id).count()
-    rating = Rating(value=value, user=user, book=book)
-    rating.update_average(times_rated)
-    session.add(rating)
+    if existing_rating:
+            all_ratings = session.query(Rating).filter(Rating.book_id == book.id).all()
+            total_ratings_count = len(all_ratings)
+            total_ratings_value = sum(rating.value for rating in all_ratings) - existing_rating.value
+            existing_rating.value = value
+            total_ratings_value += value
+
+            if total_ratings_count > 0:
+                book.average_rating = total_ratings_value / total_ratings_count
+
+    else:
+        existing_rating = Rating(value=value, user=user, book=book)
+        session.add(existing_rating)
+        
+        all_ratings = session.query(Rating).filter(Rating.book_id == book.id).all()
+        total_ratings_count = len(all_ratings)
+        total_ratings_value = sum(rating.value for rating in all_ratings) + value
+        
+        if total_ratings_count > 0:
+            book.average_rating = total_ratings_value / (total_ratings_count + 1)
+    
     session.commit()
-    session.refresh(rating)
-    return rating
+    
+    return {"status": "updated" if existing_rating else "created", "average_rating": book.average_rating}
