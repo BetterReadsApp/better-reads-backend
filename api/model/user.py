@@ -56,13 +56,34 @@ class User(UserFormRegister, table=True):
         return self.id == other.id
 
 
-class UserTiny(UserBase):
+class UserTiny(SQLModel):
     id: int
+    name: str
+    last_name: str
 
 
-class UserPublic(UserBase):
+class UserPrivate(UserBase):
     id: int
     shelves: List[ShelfForm] = []
     rated_books: List[Rating] = []
     followers: List[UserTiny] = []
     following: List[UserTiny] = []
+
+
+class UserPublic(UserTiny):
+    shelves: List[ShelfForm] = []
+    rated_books: List[Rating] = []
+    followers: List[UserTiny] = []
+    following: List[UserTiny] = []
+
+    @classmethod
+    def from_private(cls, user: UserPrivate):
+        return cls(
+            id=user.id,
+            name=user.name,
+            last_name=user.last_name,
+            shelves=user.shelves,
+            rated_books=user.rated_books,
+            followers=user.followers,
+            following=user.following,
+        )

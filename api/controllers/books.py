@@ -6,6 +6,7 @@ from ..model.rating import Rating
 from typing import Annotated
 
 router = APIRouter(prefix="/books", tags=["Books"])
+AUTH_HEADER_DESCRIPTION = "Id del usuario **logeado actualmente**"
 
 
 @router.get("")
@@ -31,7 +32,7 @@ def rate_book(
     book_id: int,
     value: int,
     session: Session = Depends(get_session),
-    auth: Annotated[int, Header()] = None,
+    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
 ):
     if not 1 <= value <= 5:
         raise HTTPException(
