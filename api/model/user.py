@@ -2,6 +2,7 @@ from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship
 from .shelf import Shelf, ShelfForm
 from .rating import Rating
+""" from .following import Following """
 
 
 class UserBase(SQLModel):
@@ -25,6 +26,7 @@ class User(UserFormRegister, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     shelves: List[Shelf] = Relationship(back_populates="user")
     rated_books: List[Rating] = Relationship(back_populates="user")
+"""     following: List[Following] = Relationship(back_populates="follower") """
 
 
 class UserPrivate(UserBase):
