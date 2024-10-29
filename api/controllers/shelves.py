@@ -5,6 +5,7 @@ from ..db import get_session, user_exists_by_field
 from ..model.shelf import ShelfForm, Shelf
 
 router = APIRouter(prefix="/shelves", tags=["Shelves"])
+AUTH_HEADER_DESCRIPTION = "Id del usuario **logeado actualmente**"
 
 
 @router.get("")
@@ -13,6 +14,7 @@ def get_shelves(
     user_id: int | None = None,
     session: Session = Depends(get_session),
 ):
+    print(f"NAME: {name}")
     query = select(Shelf)
     query = query.where(Shelf.name == name) if name else query
     query = query.where(Shelf.user_id == user_id) if user_id else query
@@ -23,7 +25,7 @@ def get_shelves(
 def create_shelf(
     shelf_form: ShelfForm,
     session: Session = Depends(get_session),
-    auth: Annotated[int, Header()] = None,
+    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
 ):
     shelf = Shelf.model_validate(shelf_form)
     shelf.user_id = auth
