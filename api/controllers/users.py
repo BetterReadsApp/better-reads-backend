@@ -17,7 +17,7 @@ def get_user_by_id(
     user = get_user_by_field("id", user_id, session)
     if auth == user_id:
         return user
-    return UserPublic.from_private(user)
+    return UserPublic.from_private(user, auth_user_id=auth)
 
 
 @router.post("/{user_id}/followers")

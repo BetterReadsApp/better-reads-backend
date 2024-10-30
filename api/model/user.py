@@ -75,9 +75,12 @@ class UserPublic(UserTiny):
     rated_books: List[Rating] = []
     followers: List[UserTiny] = []
     following: List[UserTiny] = []
+    is_following: Optional[bool] = None
 
     @classmethod
-    def from_private(cls, user: UserPrivate):
+    def from_private(cls, user: UserPrivate,  auth_user_id: int):
+        is_following = any(follower.id == auth_user_id for follower in user.followers)
+
         return cls(
             id=user.id,
             name=user.name,
@@ -86,4 +89,5 @@ class UserPublic(UserTiny):
             rated_books=user.rated_books,
             followers=user.followers,
             following=user.following,
+            is_following=is_following,
         )
