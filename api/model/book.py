@@ -24,3 +24,9 @@ class BookPublic(BookForm):
     id: int
     average_rating: Optional[float]
     ratings: List[Rating] = []
+    your_rating: Optional[int] = None
+
+    def load_rating_by(self, user):
+        self.your_rating = next(
+            (rating.value for rating in self.ratings if rating.user == user)
+        )

@@ -78,7 +78,7 @@ class UserPublic(UserTiny):
     is_following: Optional[bool] = None
 
     @classmethod
-    def from_private(cls, user: UserPrivate,  auth_user_id: int):
+    def from_private(cls, user: UserPrivate, auth_user_id: int):
         is_following = any(follower.id == auth_user_id for follower in user.followers)
 
         return cls(
