@@ -27,10 +27,4 @@ class ShelfPublic(SQLModel):
     id: int
     name: str
     user_id: int
-
-
-class ShelfPrivate(SQLModel):
-    id: int
-    name: str
-    user_id: int
     books: List[Book]

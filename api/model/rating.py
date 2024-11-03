@@ -2,6 +2,10 @@ from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional
 
 
+class RatingForm(SQLModel):
+    value: int
+
+
 class Rating(SQLModel, table=True):
     __tablename__ = "ratings"
 

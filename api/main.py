@@ -1,7 +1,6 @@
 from fastapi import FastAPI
-
-from .db import init_db
-from .controllers import auth, books, shelves, users
+from api.db import init_db
+from api.controllers import auth, books, shelves, users
 
 
 app = FastAPI(
@@ -12,9 +11,9 @@ app = FastAPI(
     },
 )
 app.include_router(auth.router)
+app.include_router(users.router)
 app.include_router(books.router)
 app.include_router(shelves.router)
-app.include_router(users.router)
 
 
 @app.on_event("startup")

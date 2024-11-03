@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Header, HTTPException, Path
 from sqlmodel import Session
-from ..db import get_session, get_user_by_field
-from ..model.user import UserPublic, UserPrivate
+from api.db import get_session, get_user_by_field
+from api.model.user import UserPublic, UserPrivate
 from typing import Annotated, Union
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -15,9 +15,7 @@ def get_user_by_id(
     auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
 ):
     user = get_user_by_field("id", user_id, session)
-    if auth == user_id:
-        return user
-    return UserPublic.from_private(user, auth_user_id=auth)
+    return user if auth == user_id else UserPublic.from_private(user, auth_user_id=auth)
 
 
 @router.post("/{user_id}/followers")
