@@ -4,7 +4,7 @@ from sqlmodel import Session, select
 from api.model.review import Review
 from ..db import get_session, get_book_by_id, get_user_by_field
 from ..model.book import BookForm, Book, BookPublic
-from ..model.rating import Rating
+from ..model.rating import Rating, RatingForm
 from typing import Annotated
 
 router = APIRouter(prefix="/books", tags=["Books"])
@@ -40,10 +40,11 @@ def create_book(book_form: BookForm, session: Session = Depends(get_session)):
 @router.post("/{book_id}/ratings")
 def rate_book(
     book_id: int,
-    value: int,
+    rating_form: RatingForm,
     session: Session = Depends(get_session),
     auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
 ):
+    value = rating_form.value
     if not 1 <= value <= 5:
         raise HTTPException(
             status_code=400, detail="Rating must be an integer between 1 and 5"
@@ -69,8 +70,7 @@ def rate_book(
             book.average_rating = total_ratings_value / total_ratings_count
 
     else:
-        existing_rating = Rating(value=value, user=user, book=book)
-        session.add(existing_rating)
+        session.add(Rating(value=value, user=user, book=book))
 
         all_ratings = session.query(Rating).filter(Rating.book_id == book.id).all()
         total_ratings_count = len(all_ratings)
