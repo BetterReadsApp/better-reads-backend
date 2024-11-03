@@ -1,11 +1,10 @@
 from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlmodel import Session, select
-
 from api.model.review import Review, ReviewForm
 from ..db import get_session, get_book_by_id, get_user_by_field
-from ..model.book import BookForm, Book, BookPublic
+from ..model.book import BookForm, Book, BookPublic, BookPrivate
 from ..model.rating import Rating, RatingForm
-from typing import Annotated
+from typing import Annotated, Union
 
 router = APIRouter(prefix="/books", tags=["Books"])
 AUTH_HEADER_DESCRIPTION = "Id del usuario **logeado actualmente**"
@@ -16,16 +15,18 @@ def get_books(session: Session = Depends(get_session)):
     return session.exec(select(Book)).all()
 
 
-@router.get("/{book_id}", response_model=BookPublic)
+@router.get("/{book_id}", response_model=Union[BookPublic, BookPrivate])
 def get_book(
     book_id: int,
     session: Session = Depends(get_session),
     auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
 ):
+    book = get_book_by_id(book_id, session)
     if auth:
         user = get_user_by_field("id", auth, session)
-    book = BookPublic.model_validate(get_book_by_id(book_id, session))
-    book.load_rating_by(user)
+        book = BookPrivate.model_validate(book)
+        book.load_rating_by(user)
+        book.load_review_by(user)
     return book
 
 
