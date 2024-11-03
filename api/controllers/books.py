@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlmodel import Session, select
 
-from api.model.review import Review
+from api.model.review import Review, ReviewForm
 from ..db import get_session, get_book_by_id, get_user_by_field
 from ..model.book import BookForm, Book, BookPublic
 from ..model.rating import Rating, RatingForm
@@ -80,7 +80,6 @@ def rate_book(
             book.average_rating = total_ratings_value / (total_ratings_count + 1)
 
     session.commit()
-
     return {
         "status": "updated" if existing_rating else "created",
         "average_rating": book.average_rating,
@@ -90,7 +89,7 @@ def rate_book(
 @router.post("/{book_id}/reviews")
 def review_book(
     book_id: int,
-    review_text: str,
+    review_form: ReviewForm,
     session: Session = Depends(get_session),
     auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
 ):
@@ -102,17 +101,14 @@ def review_book(
     existing_review = session.exec(query).first()
 
     if existing_review:
-        existing_review.review = review_text
-
+        existing_review.review = review_form.review
     else:
-        existing_review = Review(review=review_text, user=user, book=book)
-        session.add(existing_review)
+        session.add(Review(review=review_form.review, user=user, book=book))
 
     session.commit()
-
     return {
         "status": "updated" if existing_review else "created",
-        "review description": review_text,
+        "review description": review_form.review,
     }
 
 
