@@ -1,9 +1,10 @@
 from api.settings import DATABASE_URL
 from sqlmodel import create_engine, SQLModel, Session, select
 from fastapi import HTTPException
-from api.model.user import User
 from datetime import datetime
+from api.model.user import User
 from api.model.book import Book
+from api.model.shelf import Shelf
 
 engine = create_engine(DATABASE_URL, echo=True)
 
@@ -32,6 +33,14 @@ def get_book_by_id(book_id: int, session: Session):
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
     return book
+
+
+def get_shelf_by_id(shelf_id: int, session: Session):
+    query = select(Shelf).where(Shelf.id == shelf_id)
+    shelf = session.exec(query).first()
+    if not shelf:
+        raise HTTPException(status_code=404, detail="Shelf not found")
+    return shelf
 
 
 def user_exists_by_field(field_name: str, value: str, session: Session) -> bool:

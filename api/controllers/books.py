@@ -15,8 +15,16 @@ def get_books(session: Session = Depends(get_session)):
 
 
 @router.get("/{book_id}", response_model=BookPublic)
-def get_book(book_id: int, session: Session = Depends(get_session)):
-    return get_book_by_id(book_id, session)
+def get_book(
+    book_id: int,
+    session: Session = Depends(get_session),
+    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
+):
+    if auth:
+        user = get_user_by_field("id", auth, session)
+    book = BookPublic.model_validate(get_book_by_id(book_id, session))
+    book.load_rating_by(user)
+    return book
 
 
 @router.post("")
