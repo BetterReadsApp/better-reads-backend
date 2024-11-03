@@ -1,10 +1,13 @@
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship
 from datetime import datetime
-
-from api.model.review import Review
+from .review import Review
 from .rating import Rating
 from .book_shelf_link import BookShelfLink
+
+
+class BookToShelfForm(SQLModel):
+    book_id: int
 
 
 class BookForm(SQLModel):

@@ -1,26 +1,26 @@
 from typing import Annotated, Union
 from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlmodel import Session, select
-from ..db import get_session, user_exists_by_field, get_book_by_id, get_shelf_by_id
-from ..model.shelf import ShelfForm, Shelf, ShelfPrivate, ShelfPublic
+from api.db import get_session, user_exists_by_field, get_book_by_id, get_shelf_by_id
+from api.model.shelf import ShelfForm, Shelf, ShelfPublic
+from api.model.book import BookToShelfForm
 
 router = APIRouter(prefix="/shelves", tags=["Shelves"])
 AUTH_HEADER_DESCRIPTION = "Id del usuario **logeado actualmente**"
 
 
-@router.get("", response_model=Union[list[Shelf], list[ShelfPrivate]])
+@router.get("", response_model=Union[list[Shelf], list[ShelfPublic]])
 def get_shelves(
     name: str | None = None,
     user_id: int | None = None,
     session: Session = Depends(get_session),
-    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
 ):
     query = select(Shelf)
     query = query.where(Shelf.name == name) if name else query
     query = query.where(Shelf.user_id == user_id) if user_id else query
     shelves = session.exec(query).all()
-    if name and user_id and (user_id == auth):
-        shelves = [ShelfPrivate.model_validate(shelves[0])]
+    if name and user_id:
+        shelves = [ShelfPublic.model_validate(shelves[0])]
     return shelves
 
 
@@ -53,22 +53,18 @@ def create_shelf(
     return shelf
 
 
-@router.get("/{shelf_id}", response_model=Union[ShelfPrivate, ShelfPublic])
+@router.get("/{shelf_id}", response_model=ShelfPublic)
 def get_shelf(
     shelf_id: int,
     session: Session = Depends(get_session),
-    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
 ):
-    shelf = get_shelf_by_id(shelf_id, session)
-    if shelf.user_id == auth:
-        return shelf
-    return ShelfPublic.model_validate(shelf)
+    return get_shelf_by_id(shelf_id, session)
 
 
-@router.post("/{shelf_id}/books", response_model=ShelfPrivate)
+@router.post("/{shelf_id}/books", response_model=ShelfPublic)
 def add_book_to_shelf(
     shelf_id: int,
-    book_id: int,
+    book_to_shelf_form: BookToShelfForm,
     session: Session = Depends(get_session),
     auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
 ):
