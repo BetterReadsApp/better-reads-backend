@@ -1,7 +1,6 @@
 from fastapi import FastAPI
-
-from .db import init_db
-from .controllers import auth, books, shelves, users
+from api.db import init_db
+from api.controllers import auth, books, shelves, users
 
 
 app = FastAPI(

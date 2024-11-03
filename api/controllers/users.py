@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Header, HTTPException, Path
 from sqlmodel import Session
-from ..db import get_session, get_user_by_field
-from ..model.user import UserPublic, UserPrivate
+from api.db import get_session, get_user_by_field
+from api.model.user import UserPublic, UserPrivate
 from typing import Annotated, Union
 
 router = APIRouter(prefix="/users", tags=["Users"])

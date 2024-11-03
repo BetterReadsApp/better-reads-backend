@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlmodel import Session, select
 from api.model.review import Review, ReviewForm
-from ..db import get_session, get_book_by_id, get_user_by_field
-from ..model.book import BookForm, Book, BookPublic, BookPrivate
-from ..model.rating import Rating, RatingForm
+from api.db import get_session, get_book_by_id, get_user_by_field
+from api.model.book import BookForm, Book, BookPublic, BookPrivate
+from api.model.rating import Rating, RatingForm
 from typing import Annotated, Union
 
 router = APIRouter(prefix="/books", tags=["Books"])

@@ -39,25 +39,24 @@ class BookPrivate(BookForm):
     your_rating: Optional[int] = None
     your_review: Optional[str] = None
     ratings: List[Rating] = []
-    reviews: List[Review] = [] 
+    reviews: List[Review] = []
 
     def load_rating_by(self, user):
         self.your_rating = next(
-            (rating.value for rating in self.ratings if rating.user == user),
-            None
+            (rating.value for rating in self.ratings if rating.user == user), None
         )
-    
+
     def load_review_by(self, user):
         self.your_review = next(
-            (review.review for review in self.reviews if review.user == user),
-            None
+            (review.review for review in self.reviews if review.user == user), None
         )
+
 
 class BookPublic(BookForm):
     id: int
     average_rating: Optional[float]
     ratings: List[Rating] = []
-    reviews: List[Review] = [] 
+    reviews: List[Review] = []
 
 
 class BookAndShelfForm(SQLModel):

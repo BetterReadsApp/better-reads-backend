@@ -1,25 +1,24 @@
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship
-
-from api.model.review import Review
+from .review import Review
 from .shelf import Shelf, ShelfForm
 from .rating import Rating
 from .following import Following
 
 
 class UserBase(SQLModel):
-    name: str
-    last_name: str
-    email: str
+    name: str = "John"
+    last_name: str = "Doe"
+    email: str = "example@email.com"
 
 
 class UserFormRegister(UserBase):
-    password: str
+    password: str = "s0mepassw0rd"
 
 
 class UserFormLogin(SQLModel):
-    email: str
-    password: str
+    email: str = "example@email.com"
+    password: str = "s0mepassw0rd"
 
 
 class User(UserFormRegister, table=True):
@@ -57,6 +56,13 @@ class User(UserFormRegister, table=True):
 
     def __eq__(self, other):
         return self.id == other.id
+
+    def set_default_shelves(self):
+        self.shelves = [
+            Shelf(name="To Read"),
+            Shelf(name="Currently Reading"),
+            Shelf(name="Read"),
+        ]
 
 
 class UserTiny(SQLModel):
