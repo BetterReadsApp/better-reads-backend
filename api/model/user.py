@@ -1,5 +1,7 @@
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship
+
+from api.model.review import Review
 from .shelf import Shelf, ShelfForm
 from .rating import Rating
 from .following import Following
@@ -26,6 +28,7 @@ class User(UserFormRegister, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     shelves: List[Shelf] = Relationship(back_populates="user")
     rated_books: List[Rating] = Relationship(back_populates="user")
+    reviewed_books: List[Review] = Relationship(back_populates="user")
     followers: List["User"] = Relationship(
         back_populates="following",
         link_model=Following,
@@ -66,6 +69,7 @@ class UserPrivate(UserBase):
     id: int
     shelves: List[ShelfForm] = []
     rated_books: List[Rating] = []
+    reviewed_books: List[Review] = []
     followers: List[UserTiny] = []
     following: List[UserTiny] = []
 
@@ -73,6 +77,7 @@ class UserPrivate(UserBase):
 class UserPublic(UserTiny):
     shelves: List[ShelfForm] = []
     rated_books: List[Rating] = []
+    reviewed_books: List[Review] = []
     followers: List[UserTiny] = []
     following: List[UserTiny] = []
     is_following: Optional[bool] = None
@@ -87,6 +92,7 @@ class UserPublic(UserTiny):
             last_name=user.last_name,
             shelves=user.shelves,
             rated_books=user.rated_books,
+            reviewed_books=user.reviewed_books,
             followers=user.followers,
             following=user.following,
             is_following=is_following,
