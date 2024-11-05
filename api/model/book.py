@@ -13,7 +13,7 @@ class Genre(Enum):
     HISTORY = "History"
     MANGA = "Manga"
     ROMANCE = "Romance"
-    SCIENCE_FICTION = "Science Fiction"
+    SCI_FI = "Sci-Fi"
     COMIC = "Comic"
     BIOGRAPHY = "Biography"
     FANTASY = "Fantasy"
@@ -78,3 +78,10 @@ class BookAndShelfForm(SQLModel):
     book_id: int
     user_id: int
     name: str
+
+
+class BookMini(SQLModel):
+    id: int
+    title: str
+    author: str
+    genre: Genre
