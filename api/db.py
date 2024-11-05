@@ -1,5 +1,5 @@
 from api.settings import DATABASE_URL
-from sqlmodel import create_engine, SQLModel, Session, select
+from sqlmodel import create_engine, SQLModel, Session, select, or_
 from fastapi import HTTPException
 from datetime import datetime
 from api.model.user import User
@@ -25,6 +25,19 @@ def get_user_by_field(field_name: str, value: str, session: Session):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
+
+def get_users_by_name_and_last_name(name: str, last_name: str, session: Session):
+    query = select(User)
+    if name or last_name:
+        query = query.where(
+            or_(
+                User.name.ilike(f"%{name}%") if name else False,
+                User.last_name.ilike(f"%{last_name}%") if last_name else False,
+            )
+        )
+
+    return session.exec(query).all()
 
 
 def get_book_by_id(book_id: int, session: Session):

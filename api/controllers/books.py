@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, Header, HTTPException
-from sqlmodel import Session, select
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from sqlmodel import Session, select, or_
 from api.model.review import Review, ReviewForm
 from api.db import get_session, get_book_by_id, get_user_by_field
-from api.model.book import BookForm, Book, BookPublic, BookPrivate
+from api.model.book import BookForm, Book, BookPublic, BookPrivate, Genre, BookMini
 from api.model.rating import Rating, RatingForm
 from typing import Annotated, Union
 
@@ -10,9 +10,22 @@ router = APIRouter(prefix="/books", tags=["Books"])
 AUTH_HEADER_DESCRIPTION = "Id del usuario **logeado actualmente**"
 
 
-@router.get("")
-def get_books(session: Session = Depends(get_session)):
-    return session.exec(select(Book)).all()
+@router.get("", response_model=list[BookMini])
+def get_books(
+    keywords: str = Query(
+        None, description="Palabras que coincidan **con algún título o autor**"
+    ),
+    genre: Genre = Query(None, description="Género del libro **que quiero obtener**"),
+    session: Session = Depends(get_session),
+):
+    query = select(Book)
+    if keywords:
+        query = query.where(
+            or_(Book.title.icontains(keywords), Book.author.icontains(keywords))
+        )
+    if genre:
+        query = query.where(Book.genre == genre)
+    return session.exec(query).all()
 
 
 @router.get("/{book_id}", response_model=Union[BookPublic, BookPrivate])
@@ -32,10 +45,11 @@ def get_book(
 
 @router.post("")
 def create_book(book_form: BookForm, session: Session = Depends(get_session)):
-    # session.add(book_form)
-    # session.commit()
-    # session.refresh(book_form)
-    return book_form
+    book = Book.model_validate(book_form)
+    session.add(book)
+    session.commit()
+    session.refresh(book)
+    return book
 
 
 @router.post("/{book_id}/ratings")
