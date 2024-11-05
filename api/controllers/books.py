@@ -32,10 +32,11 @@ def get_book(
 
 @router.post("")
 def create_book(book_form: BookForm, session: Session = Depends(get_session)):
-    # session.add(book_form)
-    # session.commit()
-    # session.refresh(book_form)
-    return book_form
+    book = Book.model_validate(book_form)
+    session.add(book)
+    session.commit()
+    session.refresh(book)
+    return book
 
 
 @router.post("/{book_id}/ratings")

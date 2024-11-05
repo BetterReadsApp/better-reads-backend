@@ -4,6 +4,20 @@ from datetime import datetime
 from .review import Review
 from .rating import Rating
 from .book_shelf_link import BookShelfLink
+from enum import Enum
+
+
+class Genre(Enum):
+    THRILLER = "Thriller"
+    HORROR = "Horror"
+    HISTORY = "History"
+    MANGA = "Manga"
+    ROMANCE = "Romance"
+    SCIENCE_FICTION = "Science Fiction"
+    COMIC = "Comic"
+    BIOGRAPHY = "Biography"
+    FANTASY = "Fantasy"
+    PHILOSOPHY = "Philosophy"
 
 
 class BookToShelfForm(SQLModel):
@@ -13,6 +27,7 @@ class BookToShelfForm(SQLModel):
 class BookForm(SQLModel):
     title: str
     summary: str
+    genre: Genre
     author: str
     pages: int
     publication_date: datetime
