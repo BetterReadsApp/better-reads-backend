@@ -1,11 +1,22 @@
 from fastapi import APIRouter, Depends, Header, HTTPException, Path, Query
 from sqlmodel import Session
 from api.db import get_session, get_user_by_field, get_users_by_name_and_last_name
-from api.model.user import UserPublic, UserPrivate
+from api.model.user import UserPublic, UserPrivate, UserTiny
 from typing import Annotated, Union
 
 router = APIRouter(prefix="/users", tags=["Users"])
 AUTH_HEADER_DESCRIPTION = "Id del usuario **logeado actualmente**"
+
+
+@router.get("", response_model=list[UserTiny])
+def get_users(
+    name: str = Query(None, description="Nombre del usuario **que quiero obtener**"),
+    last_name: str = Query(
+        None, description="Apellido del usuario **que quiero obtener**"
+    ),
+    session: Session = Depends(get_session),
+):
+    return get_users_by_name_and_last_name(name, last_name, session)
 
 
 @router.get("/{user_id}", response_model=Union[UserPrivate, UserPublic])
@@ -20,20 +31,6 @@ def get_user_by_id(
         if not auth or auth == user_id
         else UserPublic.from_private(user, auth_user_id=auth)
     )
-
-
-@router.get("/search", response_model=list[UserPublic])
-def search_user(
-    name: str = Query(None, description="Nombre del usuario que quiero buscar"),
-    last_name: str = Query(None, description="Apellido del usuario que quiero buscar"),
-    session: Session = Depends(get_session),
-    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
-):
-    users = get_users_by_name_and_last_name(name, last_name, session)
-    return [
-        UserPublic.from_private(UserPrivate.model_validate(user), auth_user_id=auth)
-        for user in users
-    ]
 
 
 @router.post("/{user_id}/followers")
