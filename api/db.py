@@ -26,16 +26,17 @@ def get_user_by_field(field_name: str, value: str, session: Session):
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
+
 def get_users_by_name_and_last_name(name: str, last_name: str, session: Session):
     query = select(User)
     if name or last_name:
         query = query.where(
             or_(
                 User.name.ilike(f"%{name}%") if name else False,
-                User.last_name.ilike(f"%{last_name}%") if last_name else False
+                User.last_name.ilike(f"%{last_name}%") if last_name else False,
             )
         )
-    
+
     return session.exec(query).all()
 
 

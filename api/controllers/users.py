@@ -8,14 +8,19 @@ router = APIRouter(prefix="/users", tags=["Users"])
 AUTH_HEADER_DESCRIPTION = "Id del usuario **logeado actualmente**"
 
 
-@router.get("/by-id/{user_id}", response_model=Union[UserPrivate, UserPublic])
+@router.get("/{user_id}", response_model=Union[UserPrivate, UserPublic])
 def get_user_by_id(
     user_id: int = Path(description="Id del usuario que **quiero obtener**"),
     session: Session = Depends(get_session),
     auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
 ):
     user = get_user_by_field("id", user_id, session)
-    return user if auth == user_id else UserPublic.from_private(user, auth_user_id=auth)
+    return (
+        user
+        if not auth or auth == user_id
+        else UserPublic.from_private(user, auth_user_id=auth)
+    )
+
 
 @router.get("/search", response_model=list[UserPublic])
 def search_user(
@@ -25,7 +30,10 @@ def search_user(
     auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
 ):
     users = get_users_by_name_and_last_name(name, last_name, session)
-    return [UserPublic.from_private(UserPrivate.model_validate(user), auth_user_id=auth) for user in users]
+    return [
+        UserPublic.from_private(UserPrivate.model_validate(user), auth_user_id=auth)
+        for user in users
+    ]
 
 
 @router.post("/{user_id}/followers")
