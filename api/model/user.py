@@ -4,6 +4,7 @@ from .review import Review
 from .shelf import Shelf, ShelfForm
 from .rating import Rating
 from .following import Following
+from .book import RatedBook
 
 
 class UserBase(SQLModel):
@@ -74,30 +75,47 @@ class UserTiny(SQLModel):
 class UserPrivate(UserBase):
     id: int
     shelves: List[ShelfForm] = []
-    rated_books: List[Rating] = []
+    rated_books: List[RatedBook] = []
     reviewed_books: List[Review] = []
     followers: List[UserTiny] = []
     following: List[UserTiny] = []
 
+    @classmethod
+    def from_user(cls, user: User, auth_user_id: int):
+        rated_books = list(map(RatedBook.from_rating, user.rated_books))
+
+        return cls(
+            id=user.id,
+            name=user.name,
+            last_name=user.last_name,
+            email=user.email,
+            shelves=user.shelves,
+            rated_books=rated_books,
+            reviewed_books=user.reviewed_books,
+            followers=user.followers,
+            following=user.following,
+        )
+
 
 class UserPublic(UserTiny):
     shelves: List[ShelfForm] = []
-    rated_books: List[Rating] = []
+    rated_books: List[RatedBook] = []
     reviewed_books: List[Review] = []
     followers: List[UserTiny] = []
     following: List[UserTiny] = []
     is_following: Optional[bool] = None
 
     @classmethod
-    def from_private(cls, user: UserPrivate, auth_user_id: int):
+    def from_user(cls, user: User, auth_user_id: int):
         is_following = any(follower.id == auth_user_id for follower in user.followers)
+        rated_books = list(map(RatedBook.from_rating, user.rated_books))
 
         return cls(
             id=user.id,
             name=user.name,
             last_name=user.last_name,
             shelves=user.shelves,
-            rated_books=user.rated_books,
+            rated_books=rated_books,
             reviewed_books=user.reviewed_books,
             followers=user.followers,
             following=user.following,

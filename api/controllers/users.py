@@ -26,11 +26,10 @@ def get_user_by_id(
     auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
 ):
     user = get_user_by_field("id", user_id, session)
-    return (
-        user
-        if not auth or auth == user_id
-        else UserPublic.from_private(user, auth_user_id=auth)
+    user_converter = (
+        UserPrivate.from_user if not auth or auth == user_id else UserPublic.from_user
     )
+    return user_converter(user, auth)
 
 
 @router.post("/{user_id}/followers")
