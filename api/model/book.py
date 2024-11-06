@@ -99,3 +99,17 @@ class RatedBook(BookMini):
             author=rating.book.author,
             genre=rating.book.genre,
         )
+
+
+class ReviewedBook(BookMini):
+    review: str
+
+    @classmethod
+    def from_review(cls, review: Review):
+        return cls(
+            id=review.book.id,
+            review=review.review,
+            title=review.book.title,
+            author=review.book.author,
+            genre=review.book.genre,
+        )

@@ -4,7 +4,7 @@ from .review import Review
 from .shelf import Shelf, ShelfForm
 from .rating import Rating
 from .following import Following
-from .book import RatedBook
+from .book import RatedBook, ReviewedBook
 
 
 class UserBase(SQLModel):
@@ -76,13 +76,14 @@ class UserPrivate(UserBase):
     id: int
     shelves: List[ShelfForm] = []
     rated_books: List[RatedBook] = []
-    reviewed_books: List[Review] = []
+    reviewed_books: List[ReviewedBook] = []
     followers: List[UserTiny] = []
     following: List[UserTiny] = []
 
     @classmethod
     def from_user(cls, user: User, auth_user_id: int):
         rated_books = list(map(RatedBook.from_rating, user.rated_books))
+        reviewed_books = list(map(ReviewedBook.from_review, user.reviewed_books))
 
         return cls(
             id=user.id,
@@ -91,7 +92,7 @@ class UserPrivate(UserBase):
             email=user.email,
             shelves=user.shelves,
             rated_books=rated_books,
-            reviewed_books=user.reviewed_books,
+            reviewed_books=reviewed_books,
             followers=user.followers,
             following=user.following,
         )
@@ -100,7 +101,7 @@ class UserPrivate(UserBase):
 class UserPublic(UserTiny):
     shelves: List[ShelfForm] = []
     rated_books: List[RatedBook] = []
-    reviewed_books: List[Review] = []
+    reviewed_books: List[ReviewedBook] = []
     followers: List[UserTiny] = []
     following: List[UserTiny] = []
     is_following: Optional[bool] = None
@@ -109,6 +110,7 @@ class UserPublic(UserTiny):
     def from_user(cls, user: User, auth_user_id: int):
         is_following = any(follower.id == auth_user_id for follower in user.followers)
         rated_books = list(map(RatedBook.from_rating, user.rated_books))
+        reviewed_books = list(map(ReviewedBook.from_review, user.reviewed_books))
 
         return cls(
             id=user.id,
@@ -116,7 +118,7 @@ class UserPublic(UserTiny):
             last_name=user.last_name,
             shelves=user.shelves,
             rated_books=rated_books,
-            reviewed_books=user.reviewed_books,
+            reviewed_books=reviewed_books,
             followers=user.followers,
             following=user.following,
             is_following=is_following,
