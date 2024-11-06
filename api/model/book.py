@@ -85,3 +85,31 @@ class BookMini(SQLModel):
     title: str
     author: str
     genre: Genre
+
+
+class RatedBook(BookMini):
+    value: int
+
+    @classmethod
+    def from_rating(cls, rating: Rating):
+        return cls(
+            id=rating.book.id,
+            value=rating.value,
+            title=rating.book.title,
+            author=rating.book.author,
+            genre=rating.book.genre,
+        )
+
+
+class ReviewedBook(BookMini):
+    review: str
+
+    @classmethod
+    def from_review(cls, review: Review):
+        return cls(
+            id=review.book.id,
+            review=review.review,
+            title=review.book.title,
+            author=review.book.author,
+            genre=review.book.genre,
+        )
