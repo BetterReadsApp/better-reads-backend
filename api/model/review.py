@@ -3,7 +3,7 @@ from typing import Optional
 
 
 class ReviewForm(SQLModel):
-    review: str = Field(default="", min_length=1, max_length=500)
+    review: str = Field(default="", min_length=10, max_length=500)
 
 
 class Review(ReviewForm, table=True):
