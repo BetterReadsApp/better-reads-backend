@@ -16,11 +16,11 @@ def get_shelves(
     session: Session = Depends(get_session),
 ):
     query = select(Shelf)
-    query = query.where(Shelf.name == name) if name else query
+    query = query.where(Shelf.name.icontains(name)) if name else query
     query = query.where(Shelf.user_id == user_id) if user_id else query
     shelves = session.exec(query).all()
-    if name and user_id:
-        shelves = [ShelfPublic.model_validate(shelves[0])]
+    if user_id:
+        shelves = list(map(ShelfPublic.model_validate, shelves)) if shelves else []
     return shelves
 
 
@@ -77,7 +77,7 @@ def add_book_to_shelf(
             status_code=403, detail="You cannot add a book to a shelf that's not yours"
         )
 
-    book = get_book_by_id(book_id, session)
+    book = get_book_by_id(book_to_shelf_form.book_id, session)
     if shelf.contains(book):
         raise HTTPException(
             status_code=403, detail="The shelf already contains that book"

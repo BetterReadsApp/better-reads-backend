@@ -3,10 +3,10 @@ from typing import Optional
 
 
 class RatingForm(SQLModel):
-    value: int
+    value: int = 1
 
 
-class Rating(SQLModel, table=True):
+class Rating(RatingForm, table=True):
     __tablename__ = "ratings"
 
     user_id: Optional[int] = Field(
@@ -15,7 +15,6 @@ class Rating(SQLModel, table=True):
     book_id: Optional[int] = Field(
         default=None, foreign_key="books.id", primary_key=True
     )
-    value: int = 1
 
     user: "User" = Relationship(back_populates="rated_books")
     book: "Book" = Relationship(back_populates="ratings")
