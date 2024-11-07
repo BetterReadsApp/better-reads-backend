@@ -77,7 +77,7 @@ def add_book_to_shelf(
             status_code=403, detail="You cannot add a book to a shelf that's not yours"
         )
 
-    book = get_book_by_id(book_id, session)
+    book = get_book_by_id(book_to_shelf_form.book_id, session)
     if shelf.contains(book):
         raise HTTPException(
             status_code=403, detail="The shelf already contains that book"
