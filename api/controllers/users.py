@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Depends, Header, HTTPException, Path, Query
 from sqlmodel import Session
 from api.db import get_session, get_user_by_field, get_users_by_name_and_last_name
-from api.model.user import UserPublic, UserPrivate, UserTiny
+from api.model.user import UserPublic, UserPrivate, UserMini
 from typing import Annotated, Union
 
 router = APIRouter(prefix="/users", tags=["Users"])
 AUTH_HEADER_DESCRIPTION = "Id del usuario **logeado actualmente**"
 
 
-@router.get("", response_model=list[UserTiny])
+@router.get("", response_model=list[UserMini])
 def get_users(
     name: str = Query(None, description="Nombre del usuario **que quiero obtener**"),
     last_name: str = Query(

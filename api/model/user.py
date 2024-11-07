@@ -66,7 +66,7 @@ class User(UserFormRegister, table=True):
         ]
 
 
-class UserTiny(SQLModel):
+class UserMini(SQLModel):
     id: int
     name: str
     last_name: str
@@ -77,8 +77,8 @@ class UserPrivate(UserBase):
     shelves: List[ShelfForm] = []
     rated_books: List[RatedBook] = []
     reviewed_books: List[ReviewedBook] = []
-    followers: List[UserTiny] = []
-    following: List[UserTiny] = []
+    followers: List[UserMini] = []
+    following: List[UserMini] = []
 
     @classmethod
     def from_user(cls, user: User, auth_user_id: int):
@@ -98,12 +98,12 @@ class UserPrivate(UserBase):
         )
 
 
-class UserPublic(UserTiny):
+class UserPublic(UserMini):
     shelves: List[ShelfForm] = []
     rated_books: List[RatedBook] = []
     reviewed_books: List[ReviewedBook] = []
-    followers: List[UserTiny] = []
-    following: List[UserTiny] = []
+    followers: List[UserMini] = []
+    following: List[UserMini] = []
     is_following: Optional[bool] = None
 
     @classmethod
