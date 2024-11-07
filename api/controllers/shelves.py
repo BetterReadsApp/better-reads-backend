@@ -16,11 +16,11 @@ def get_shelves(
     session: Session = Depends(get_session),
 ):
     query = select(Shelf)
-    query = query.where(Shelf.name == name) if name else query
+    query = query.where(Shelf.name.icontains(name)) if name else query
     query = query.where(Shelf.user_id == user_id) if user_id else query
     shelves = session.exec(query).all()
-    if name and user_id:
-        shelves = [ShelfPublic.model_validate(shelves[0])]
+    if user_id:
+        shelves = list(map(ShelfPublic.model_validate, shelves)) if shelves else []
     return shelves
 
 
