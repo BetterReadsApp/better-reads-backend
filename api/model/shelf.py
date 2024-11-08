@@ -1,7 +1,7 @@
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship
 from .book_shelf_link import BookShelfLink
-from .book import Book
+from .book import Book, BookMini
 
 
 class ShelfForm(SQLModel):
@@ -27,4 +27,9 @@ class ShelfPublic(SQLModel):
     id: int
     name: str
     user_id: int
-    books: List[Book]
+    books: List[BookMini]
+
+
+class ShelfMini(SQLModel):
+    name: str
+    books: List[BookMini]

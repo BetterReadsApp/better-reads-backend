@@ -3,8 +3,9 @@ from sqlmodel import create_engine, SQLModel, Session, select, or_
 from fastapi import HTTPException
 from datetime import datetime
 from api.model.user import User
-from api.model.book import Book, Genre
+from api.model.book import Book
 from api.model.shelf import Shelf
+from api.model.enums.book_genre import BookGenre
 
 engine = create_engine(DATABASE_URL, echo=True)
 
@@ -71,7 +72,7 @@ def create_books(engine):
             author="Stephen King",
             pages=199,
             publication_date=datetime(1974, 4, 5),
-            genre=Genre.HORROR,
+            genre=BookGenre.HORROR,
         )
         it = Book(
             title="It",
@@ -79,7 +80,7 @@ def create_books(engine):
             author="Stephen King",
             pages=1116,
             publication_date=datetime(1986, 9, 15),
-            genre=Genre.HORROR,
+            genre=BookGenre.HORROR,
         )
         the_shining = Book(
             title="The Shining",
@@ -87,7 +88,7 @@ def create_books(engine):
             author="Stephen King",
             pages=447,
             publication_date=datetime(1977, 1, 28),
-            genre=Genre.HORROR,
+            genre=BookGenre.HORROR,
         )
         misery = Book(
             title="Misery",
@@ -95,7 +96,7 @@ def create_books(engine):
             author="Stephen King",
             pages=338,
             publication_date=datetime(1987, 6, 8),
-            genre=Genre.HORROR,
+            genre=BookGenre.HORROR,
         )
         pet_semetary = Book(
             title="Pet Sematary",
@@ -103,7 +104,7 @@ def create_books(engine):
             author="Stephen King",
             pages=374,
             publication_date=datetime(1983, 11, 14),
-            genre=Genre.HORROR,
+            genre=BookGenre.HORROR,
         )
         session.add_all([carrie, it, the_shining, misery, pet_semetary])
         session.commit()

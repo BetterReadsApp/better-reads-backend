@@ -2,8 +2,9 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from sqlmodel import Session, select, or_
 from api.model.review import Review, ReviewForm
 from api.db import get_session, get_book_by_id, get_user_by_field
-from api.model.book import BookForm, Book, BookPublic, BookPrivate, Genre, BookMini
+from api.model.book import BookForm, Book, BookPublic, BookPrivate, BookMini
 from api.model.rating import Rating, RatingForm
+from api.model.enums.book_genre import BookGenre
 from typing import Annotated, Union
 
 router = APIRouter(prefix="/books", tags=["Books"])
@@ -15,7 +16,9 @@ def get_books(
     keywords: str = Query(
         None, description="Palabras que coincidan **con algún título o autor**"
     ),
-    genre: Genre = Query(None, description="Género del libro **que quiero obtener**"),
+    genre: BookGenre = Query(
+        None, description="Género del libro **que quiero obtener**"
+    ),
     session: Session = Depends(get_session),
 ):
     query = select(Book)
@@ -37,9 +40,10 @@ def get_book(
     book = get_book_by_id(book_id, session)
     if auth:
         user = get_user_by_field("id", auth, session)
-        book = BookPrivate.model_validate(book)
-        book.load_rating_by(user)
-        book.load_review_by(user)
+        book = BookPrivate.from_book(book)
+        book.load_info_for(user)
+    else:
+        book = BookPublic.from_book(book)
     return book
 
 

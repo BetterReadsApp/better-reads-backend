@@ -1,23 +1,10 @@
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship
 from datetime import datetime
-from .review import Review
-from .rating import Rating
+from .review import Review, ReviewerUser
 from .book_shelf_link import BookShelfLink
-from enum import Enum
-
-
-class Genre(Enum):
-    THRILLER = "Thriller"
-    HORROR = "Horror"
-    HISTORY = "History"
-    MANGA = "Manga"
-    ROMANCE = "Romance"
-    SCI_FI = "Sci-Fi"
-    COMIC = "Comic"
-    BIOGRAPHY = "Biography"
-    FANTASY = "Fantasy"
-    PHILOSOPHY = "Philosophy"
+from .rating import RaterUser
+from .enums.book_genre import BookGenre
 
 
 class BookToShelfForm(SQLModel):
@@ -27,7 +14,7 @@ class BookToShelfForm(SQLModel):
 class BookForm(SQLModel):
     title: str
     summary: str
-    genre: Genre
+    genre: BookGenre
     author: str
     pages: int
     publication_date: datetime
@@ -38,7 +25,7 @@ class Book(BookForm, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     average_rating: Optional[float] = Field(default=None)
-    ratings: List[Rating] = Relationship(back_populates="book")
+    ratings: List["Rating"] = Relationship(back_populates="book")
     reviews: List[Review] = Relationship(back_populates="book")
     shelves: List["Shelf"] = Relationship(
         back_populates="books", link_model=BookShelfLink
@@ -53,25 +40,75 @@ class BookPrivate(BookForm):
     average_rating: Optional[float]
     your_rating: Optional[int] = None
     your_review: Optional[str] = None
-    ratings: List[Rating] = []
-    reviews: List[Review] = []
+    ratings: List[RaterUser] = []
+    reviews: List[ReviewerUser] = []
 
-    def load_rating_by(self, user):
-        self.your_rating = next(
-            (rating.value for rating in self.ratings if rating.user == user), None
+    @classmethod
+    def from_book(cls, book):
+        ratings = list(map(RaterUser.from_rating, book.ratings))
+        reviews = list(map(ReviewerUser.from_review, book.reviews))
+
+        return cls(
+            id=book.id,
+            title=book.title,
+            summary=book.summary,
+            genre=book.genre,
+            author=book.author,
+            pages=book.pages,
+            publication_date=book.publication_date,
+            average_rating=book.average_rating,
+            ratings=ratings,
+            reviews=reviews,
         )
 
-    def load_review_by(self, user):
+    def load_info_for(self, user):
+        self.load_rating_for(user)
+        self.load_review_for(user)
+
+    def load_rating_for(self, user):
+        self.your_rating = next(
+            (
+                rater_user.value
+                for rater_user in self.ratings
+                if rater_user.user_id == user.id
+            ),
+            None,
+        )
+
+    def load_review_for(self, user):
         self.your_review = next(
-            (review.review for review in self.reviews if review.user == user), None
+            (
+                reviewer_user.review
+                for reviewer_user in self.reviews
+                if reviewer_user.user_id == user.id
+            ),
+            None,
         )
 
 
 class BookPublic(BookForm):
     id: int
     average_rating: Optional[float]
-    ratings: List[Rating] = []
-    reviews: List[Review] = []
+    ratings: List[RaterUser] = []
+    reviews: List[ReviewerUser] = []
+
+    @classmethod
+    def from_book(cls, book):
+        ratings = list(map(RaterUser.from_rating, book.ratings))
+        reviews = list(map(ReviewerUser.from_review, book.reviews))
+
+        return cls(
+            id=book.id,
+            title=book.title,
+            summary=book.summary,
+            genre=book.genre,
+            author=book.author,
+            pages=book.pages,
+            publication_date=book.publication_date,
+            average_rating=book.average_rating,
+            ratings=ratings,
+            reviews=reviews,
+        )
 
 
 class BookAndShelfForm(SQLModel):
@@ -84,32 +121,4 @@ class BookMini(SQLModel):
     id: int
     title: str
     author: str
-    genre: Genre
-
-
-class RatedBook(BookMini):
-    value: int
-
-    @classmethod
-    def from_rating(cls, rating: Rating):
-        return cls(
-            id=rating.book.id,
-            value=rating.value,
-            title=rating.book.title,
-            author=rating.book.author,
-            genre=rating.book.genre,
-        )
-
-
-class ReviewedBook(BookMini):
-    review: str
-
-    @classmethod
-    def from_review(cls, review: Review):
-        return cls(
-            id=review.book.id,
-            review=review.review,
-            title=review.book.title,
-            author=review.book.author,
-            genre=review.book.genre,
-        )
+    genre: BookGenre
