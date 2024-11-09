@@ -1,7 +1,7 @@
 from api.settings import DATABASE_URL
 from sqlmodel import create_engine, SQLModel, Session, select, or_
 from fastapi import HTTPException
-from datetime import datetime
+from datetime import date
 from api.model.user import User
 from api.model.book import Book
 from api.model.shelf import Shelf
@@ -71,7 +71,7 @@ def create_books(engine):
             summary="Carrie White, a shy, friendless teenage",
             author="Stephen King",
             pages=199,
-            publication_date=datetime(1974, 4, 5),
+            publication_date=date(1974, 4, 5),
             genre=BookGenre.HORROR,
         )
         it = Book(
@@ -79,7 +79,7 @@ def create_books(engine):
             summary="Ohhh scary...",
             author="Stephen King",
             pages=1116,
-            publication_date=datetime(1986, 9, 15),
+            publication_date=date(1986, 9, 15),
             genre=BookGenre.HORROR,
         )
         the_shining = Book(
@@ -87,7 +87,7 @@ def create_books(engine):
             summary="A family heads to an isolated hotel for the winter where an evil presence influences the father into violence.",
             author="Stephen King",
             pages=447,
-            publication_date=datetime(1977, 1, 28),
+            publication_date=date(1977, 1, 28),
             genre=BookGenre.HORROR,
         )
         misery = Book(
@@ -95,7 +95,7 @@ def create_books(engine):
             summary="A famous author is held captive by a deranged fan who demands he writes her preferred ending.",
             author="Stephen King",
             pages=338,
-            publication_date=datetime(1987, 6, 8),
+            publication_date=date(1987, 6, 8),
             genre=BookGenre.HORROR,
         )
         pet_semetary = Book(
@@ -103,7 +103,7 @@ def create_books(engine):
             summary="A family discovers a burial ground with the power to bring back the dead, but at a terrible cost.",
             author="Stephen King",
             pages=374,
-            publication_date=datetime(1983, 11, 14),
+            publication_date=date(1983, 11, 14),
             genre=BookGenre.HORROR,
         )
         session.add_all([carrie, it, the_shining, misery, pet_semetary])

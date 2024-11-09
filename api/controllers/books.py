@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
-from sqlmodel import Session, select, or_
+from sqlmodel import Session, select, or_, extract
 from api.model.review import Review, ReviewForm
 from api.db import get_session, get_book_by_id, get_user_by_field
 from api.model.book import BookForm, Book, BookPublic, BookPrivate, BookMini
@@ -14,11 +14,15 @@ AUTH_HEADER_DESCRIPTION = "Id del usuario **logeado actualmente**"
 @router.get("", response_model=list[BookMini])
 def get_books(
     keywords: str = Query(
-        None, description="Palabras que coincidan **con algún título o autor**"
+        None, description="Palabras que coincidan con algún **título o autor**"
     ),
-    genre: BookGenre = Query(
-        None, description="Género del libro **que quiero obtener**"
+    from_year: int = Query(
+        None, description="**Año** de publicación **desde** el que quiero obtener"
     ),
+    to_year: int = Query(
+        None, description="**Año** de publicación **hasta** el que quiero obtener"
+    ),
+    genre: BookGenre = Query(None, description="**Género**"),
     session: Session = Depends(get_session),
 ):
     query = select(Book)
@@ -28,6 +32,11 @@ def get_books(
         )
     if genre:
         query = query.where(Book.genre == genre)
+    if from_year:
+        query = query.where(from_year <= extract("year", Book.publication_date))
+    if to_year:
+        query = query.where(extract("year", Book.publication_date) <= to_year)
+
     return session.exec(query).all()
 
 
