@@ -1,10 +1,9 @@
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship
-from .review import Review
-from .shelf import Shelf, ShelfForm
-from .rating import Rating
+from .review import Review, ReviewedBook
+from .shelf import Shelf, ShelfMini
+from .rating import Rating, RatedBook
 from .following import Following
-from .book import RatedBook, ReviewedBook
 
 
 class UserBase(SQLModel):
@@ -74,7 +73,7 @@ class UserMini(SQLModel):
 
 class UserPrivate(UserBase):
     id: int
-    shelves: List[ShelfForm] = []
+    shelves: List[ShelfMini] = []
     rated_books: List[RatedBook] = []
     reviewed_books: List[ReviewedBook] = []
     followers: List[UserMini] = []
@@ -99,7 +98,7 @@ class UserPrivate(UserBase):
 
 
 class UserPublic(UserMini):
-    shelves: List[ShelfForm] = []
+    shelves: List[ShelfMini] = []
     rated_books: List[RatedBook] = []
     reviewed_books: List[ReviewedBook] = []
     followers: List[UserMini] = []
