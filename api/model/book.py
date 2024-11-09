@@ -1,6 +1,6 @@
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship
-from datetime import datetime
+from datetime import date
 from .review import Review, ReviewerUser
 from .book_shelf_link import BookShelfLink
 from .rating import RaterUser
@@ -17,7 +17,7 @@ class BookForm(SQLModel):
     genre: BookGenre
     author: str
     pages: int
-    publication_date: datetime
+    publication_date: date
 
 
 class Book(BookForm, table=True):
@@ -122,3 +122,4 @@ class BookMini(SQLModel):
     title: str
     author: str
     genre: BookGenre
+    publication_date: date
