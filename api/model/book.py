@@ -123,3 +123,13 @@ class BookMini(SQLModel):
     author: str
     genre: BookGenre
     publication_date: date
+
+    @classmethod
+    def from_book(cls, book):
+        return cls(
+            id=book.id,
+            title=book.title,
+            genre=book.genre,
+            author=book.author,
+            publication_date=book.publication_date,
+        )
