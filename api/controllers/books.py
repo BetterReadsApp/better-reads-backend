@@ -144,3 +144,5 @@ def review_book(
 def get_reviews_for_book(book_id: int, session: Session = Depends(get_session)):
     book = get_book_by_id(book_id, session)
     return book.reviews
+
+

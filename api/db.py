@@ -1,3 +1,5 @@
+from api.model.rating import Rating
+from api.model.review import Review
 from api.settings import DATABASE_URL
 from sqlmodel import create_engine, SQLModel, Session, select, or_
 from fastapi import HTTPException
@@ -62,6 +64,40 @@ def user_exists_by_field(field_name: str, value: str, session: Session) -> bool:
     user = session.exec(query).first()
 
     return user is not None
+
+
+def get_rated_books_by_user_id(user_id: int, session: Session):
+    query = select(Book).join(Book.ratings).where(Rating.user_id == user_id)
+    return session.exec(query).all()
+
+
+def get_read_books_by_user_id(user_id: int, session: Session):
+    query = select(Shelf).where(Shelf.name == "Read", Shelf.user_id == user_id)
+    shelf = session.exec(query).first()
+    if not shelf:
+        return []
+    return shelf.books
+
+
+def get_books_by_authors(books: list[Book], session: Session):
+    new_books = []
+    for book in books:
+        query = select(Book).where(Book.author == book.author)
+        new_books.extend(session.exec(query).all())
+    return new_books
+
+
+def get_books_by_genre(books: list[Book], session: Session):
+    new_books = []
+    for book in books:
+        query = select(Book).where(Book.genre == book.genre)
+        new_books.extend(session.exec(query).all())
+    return new_books
+
+
+def get_books(session: Session):
+    query = select(Book)
+    return session.exec(query).all()
 
 
 def create_books(engine):
