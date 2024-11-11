@@ -15,11 +15,11 @@ from api.model.rating import Rating, RatingForm
 from api.model.enums.book_genre import BookGenre
 from typing import Annotated, Union
 
-router = APIRouter(prefix="/books", tags=["Books"])
+router = APIRouter(tags=["Books"])
 AUTH_HEADER_DESCRIPTION = "Id del usuario **logeado actualmente**"
 
 
-@router.get("", response_model=list[BookMini])
+@router.get("/books", response_model=list[BookMini])
 def get_books(
     keywords: str = Query(
         None, description="Palabras que coincidan con algún **título o autor**"
@@ -48,7 +48,7 @@ def get_books(
     return session.exec(query).all()
 
 
-@router.get("/{book_id}", response_model=Union[BookPublic, BookPrivate])
+@router.get("/books/{book_id}", response_model=Union[BookPublic, BookPrivate])
 def get_book(
     book_id: int,
     session: Session = Depends(get_session),
@@ -64,7 +64,7 @@ def get_book(
     return book
 
 
-@router.post("")
+@router.post("/books")
 def create_book(book_form: BookForm, session: Session = Depends(get_session)):
     book = Book.model_validate(book_form)
     session.add(book)
@@ -73,7 +73,7 @@ def create_book(book_form: BookForm, session: Session = Depends(get_session)):
     return book
 
 
-@router.post("/{book_id}/ratings")
+@router.post("/books/{book_id}/ratings")
 def rate_book(
     book_id: int,
     rating_form: RatingForm,
@@ -122,7 +122,7 @@ def rate_book(
     }
 
 
-@router.post("/{book_id}/reviews")
+@router.post("/books/{book_id}/reviews")
 def review_book(
     book_id: int,
     review_form: ReviewForm,
@@ -148,20 +148,18 @@ def review_book(
     }
 
 
-@router.get("/{book_id}/reviews")
+@router.get("/books/{book_id}/reviews")
 def get_reviews_for_book(book_id: int, session: Session = Depends(get_session)):
     book = get_book_by_id(book_id, session)
     return book.reviews
 
 
-@router.get("/{user_id}/recommendations", response_model=list[BookMini])
-def get_book_recommendations(
+@router.get("/recommended", response_model=list[BookMini])
+def get_recommended_books(
     auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
     session: Session = Depends(get_session),
 ):
     user = get_user_by_field("id", auth, session)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
 
     final_list = []
     rated_books = get_rated_books_by_user_id(auth, session)
@@ -174,12 +172,12 @@ def get_book_recommendations(
         final_list.extend(find_recommended_books(read_books, session))
 
     if len(final_list) < 7:
-        final_list.extend(get_books(session))
+        final_list.extend(get_books(None, None, None, None, session))
 
     return [BookMini.from_book(book) for book in final_list]
 
 
-def find_recommended_books(books: list[Book], session: Session = Depends(get_session)):
+def find_recommended_books(books: list[Book], session: Session):
     final_list = []
     book_authors = get_books_by_authors(books, session)
     book_genres = get_books_by_genre(books, session)

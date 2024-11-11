@@ -94,11 +94,6 @@ def get_books_by_genre(books: list[Book], session: Session):
     return new_books
 
 
-def get_books(session: Session):
-    query = select(Book)
-    return session.exec(query).all()
-
-
 def create_books(engine):
     with Session(engine) as session:
         carrie = Book(
