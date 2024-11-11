@@ -169,28 +169,30 @@ def get_recommended_books(
 
     read_books = get_read_books_by_user_id(auth, session)
     if len(final_list) < 7 and read_books:
-        final_list.extend(find_recommended_books(read_books, session))
+        for book in find_recommended_books(read_books, session):
+            if book not in final_list:
+                final_list.append(book)
 
     if len(final_list) < 7:
-        final_list.extend(get_books(None, None, None, None, session))
+        for book in get_books(None, None, None, None, session):
+            if book not in final_list:
+                final_list.append(book)
 
     return [BookMini.from_book(book) for book in final_list]
 
 
 def find_recommended_books(books: list[Book], session: Session):
-    final_list = []
-    book_authors = get_books_by_authors(books, session)
-    book_genres = get_books_by_genre(books, session)
-
-    final_list.extend(book_authors)
-    final_list.extend(book_genres)
-    return final_list
+    final_set = []
+    final_set.extend(get_books_by_authors(books, session))
+    for book in get_books_by_genre(books, session):
+        if book not in final_set:
+            final_set.append(book)
+            
+    return list(final_set)
 
 
 def filter_by_rating(books: list[Book], user_id: int):
-    well_rated_books = []
-    for book in books:
-        for rating in book.ratings:
-            if rating.user_id == user_id and rating.value >= 3:
-                well_rated_books.append(book)
-    return well_rated_books
+    return [
+        book for book in books
+        if any(rating.user_id == user_id and rating.value >= 3 for rating in book.ratings)
+    ]
