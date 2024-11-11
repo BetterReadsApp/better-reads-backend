@@ -1,5 +1,4 @@
 from api.model.rating import Rating
-from api.model.review import Review
 from api.settings import DATABASE_URL
 from sqlmodel import create_engine, SQLModel, Session, select, or_
 from fastapi import HTTPException
@@ -93,11 +92,6 @@ def get_books_by_genre(books: list[Book], session: Session):
         query = select(Book).where(Book.genre == book.genre)
         new_books.extend(session.exec(query).all())
     return new_books
-
-
-def get_books(session: Session):
-    query = select(Book)
-    return session.exec(query).all()
 
 
 def create_books(engine):
