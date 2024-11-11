@@ -75,4 +75,3 @@ def unfollow_user(
     session.add(follower_user)
     session.commit()
     return {"detail": "User unfollowed successfully"}
-

@@ -1,5 +1,4 @@
 from api.model.rating import Rating
-from api.model.review import Review
 from api.settings import DATABASE_URL
 from sqlmodel import create_engine, SQLModel, Session, select, or_
 from fastapi import HTTPException

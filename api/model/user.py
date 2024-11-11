@@ -10,12 +10,11 @@ class UserBase(SQLModel):
     name: str = "John"
     last_name: str = "Doe"
     email: str = "example@email.com"
-    is_author: bool = False
+    is_author: bool = Field(default=False, nullable=False)
 
 
 class UserFormRegister(UserBase):
     password: str = "s0mepassw0rd"
-    is_author: bool = False
 
 
 class UserFormLogin(SQLModel):
