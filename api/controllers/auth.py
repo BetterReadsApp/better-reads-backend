@@ -38,6 +38,7 @@ def register_user(user_form: UserFormRegister, session: Session = Depends(get_se
         user_form.password.encode("utf-8"), bcrypt.gensalt()
     )
     user.password = hashed_password.decode("utf-8")
+    user.is_author = user_form.is_author
     user.set_default_shelves()
 
     session.add(user)

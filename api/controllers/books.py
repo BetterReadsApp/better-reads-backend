@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from sqlmodel import Session, select, or_, extract
 from api.model.review import Review, ReviewForm
-from api.db import get_session, get_book_by_id, get_user_by_field
+from api.db import get_books_by_authors, get_books_by_genre, get_rated_books_by_user_id, get_read_books_by_user_id, get_session, get_book_by_id, get_user_by_field
 from api.model.book import BookForm, Book, BookPublic, BookPrivate, BookMini
 from api.model.rating import Rating, RatingForm
 from api.model.enums.book_genre import BookGenre
@@ -144,3 +144,48 @@ def review_book(
 def get_reviews_for_book(book_id: int, session: Session = Depends(get_session)):
     book = get_book_by_id(book_id, session)
     return book.reviews
+
+
+
+@router.get("/{user_id}/recommendations", response_model=list[BookMini])
+def get_book_recommendations(
+    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
+    session: Session = Depends(get_session),
+):
+    user = get_user_by_field("id", auth, session)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    final_list = []
+    rated_books = get_rated_books_by_user_id(auth, session)
+    if rated_books:
+        well_rated_books = filter_by_rating(rated_books, auth)
+        final_list.extend(find_recommended_books(well_rated_books, session))
+    
+    read_books = get_read_books_by_user_id(auth, session)
+    if len(final_list) < 7 and read_books:
+        final_list.extend(find_recommended_books(read_books, session))
+    
+    if len(final_list) < 7:
+        final_list.extend(get_books(session))
+
+    return [BookMini.from_book(book) for book in final_list]
+    
+
+def find_recommended_books(books: list[Book], session: Session = Depends(get_session)):
+    final_list = []
+    book_authors = get_books_by_authors(books, session)
+    book_genres = get_books_by_genre(books, session)
+
+    final_list.extend(book_authors)
+    final_list.extend(book_genres)
+    return final_list
+
+
+def filter_by_rating(books: list[Book], user_id: int):
+    well_rated_books = []
+    for book in books:
+        for rating in book.ratings:
+            if rating.user_id == user_id and rating.value >= 3:
+                well_rated_books.append(book)
+    return well_rated_books

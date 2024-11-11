@@ -10,10 +10,12 @@ class UserBase(SQLModel):
     name: str = "John"
     last_name: str = "Doe"
     email: str = "example@email.com"
+    is_author: bool = False
 
 
 class UserFormRegister(UserBase):
     password: str = "s0mepassw0rd"
+    is_author: bool = False
 
 
 class UserFormLogin(SQLModel):
@@ -73,6 +75,7 @@ class UserMini(SQLModel):
 
 class UserPrivate(UserBase):
     id: int
+    is_author: bool
     shelves: List[ShelfMini] = []
     rated_books: List[RatedBook] = []
     reviewed_books: List[ReviewedBook] = []
@@ -86,6 +89,7 @@ class UserPrivate(UserBase):
 
         return cls(
             id=user.id,
+            is_author=user.is_author,
             name=user.name,
             last_name=user.last_name,
             email=user.email,
@@ -98,6 +102,7 @@ class UserPrivate(UserBase):
 
 
 class UserPublic(UserMini):
+    is_author: bool
     shelves: List[ShelfMini] = []
     rated_books: List[RatedBook] = []
     reviewed_books: List[ReviewedBook] = []
@@ -113,6 +118,7 @@ class UserPublic(UserMini):
 
         return cls(
             id=user.id,
+            is_author=user.is_author,
             name=user.name,
             last_name=user.last_name,
             shelves=user.shelves,
