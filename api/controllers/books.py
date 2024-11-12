@@ -38,7 +38,11 @@ def get_books(
     query = select(Book)
     if keywords:
         query = query.join(Book.author).where(
-            or_(Book.title.icontains(keywords), User.name.icontains(keywords), User.last_name.icontains(keywords))
+            or_(
+                Book.title.icontains(keywords),
+                User.name.icontains(keywords),
+                User.last_name.icontains(keywords),
+            )
         )
     if genre:
         query = query.where(Book.genre == genre)
@@ -68,6 +72,11 @@ def get_book(
 
 @router.post("/books")
 def create_book(book_form: BookForm, session: Session = Depends(get_session)):
+    user = get_user_by_field("id", book_form.author_id, session)
+    if not user.is_author:
+        raise HTTPException(
+            status_code=403, detail="You must be an author to create a book"
+        )
     book = Book.model_validate(book_form)
     session.add(book)
     session.commit()
