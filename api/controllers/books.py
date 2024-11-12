@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from sqlmodel import Session, select, or_, extract
-from typing import Annotated, Union
+from typing import Annotated
 from api.db import (
     get_books_by_authors,
     get_books_by_genre,
@@ -11,11 +11,12 @@ from api.db import (
     get_user_by_field,
 )
 from api.model.enums.book_genre import BookGenre
-from api.model.book import BookForm, Book, BookPublic, BookPrivate, BookMini
+from api.model.book import BookForm, Book, BookMini
 from api.model.review import Review, ReviewForm
 from api.model.rating import Rating, RatingForm
 from api.model.quiz import QuizForm
 from api.model.user import User
+from api.formatters.book_formatter import BookFormatter
 
 router = APIRouter(tags=["Books"])
 AUTH_HEADER_DESCRIPTION = "Id del usuario **logeado actualmente**"
@@ -54,20 +55,15 @@ def get_books(
     return session.exec(query).all()
 
 
-@router.get("/books/{book_id}", response_model=Union[BookPublic, BookPrivate])
+@router.get("/books/{book_id}")
 def get_book(
     book_id: int,
     session: Session = Depends(get_session),
     auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
 ):
+    user = get_user_by_field("id", auth, session) if auth else None
     book = get_book_by_id(book_id, session)
-    if auth:
-        user = get_user_by_field("id", auth, session)
-        book = BookPrivate.from_book(book)
-        book.load_info_for(user)
-    else:
-        book = BookPublic.from_book(book)
-    return book
+    return BookFormatter.format_for_user(book, user)
 
 
 @router.post("/books")
