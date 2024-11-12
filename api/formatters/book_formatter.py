@@ -2,8 +2,8 @@ from api.model.user import UserMini
 
 
 class BookFormatter:
-    @staticmethod
-    def format_for_user(book, user):
+    @classmethod
+    def format_for_user(cls, book, user):
         book_dict = book.__dict__
         book_dict["author"] = UserMini.model_validate(book.author)
 
