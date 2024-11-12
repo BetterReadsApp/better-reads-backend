@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from sqlmodel import Session, select, or_, extract
-from api.model.review import Review, ReviewForm
+from typing import Annotated, Union
 from api.db import (
     get_books_by_authors,
     get_books_by_genre,
@@ -10,10 +10,11 @@ from api.db import (
     get_book_by_id,
     get_user_by_field,
 )
-from api.model.book import BookForm, Book, BookPublic, BookPrivate, BookMini
-from api.model.rating import Rating, RatingForm
 from api.model.enums.book_genre import BookGenre
-from typing import Annotated, Union
+from api.model.book import BookForm, Book, BookPublic, BookPrivate, BookMini
+from api.model.review import Review, ReviewForm
+from api.model.rating import Rating, RatingForm
+from api.model.quiz import QuizForm
 
 router = APIRouter(tags=["Books"])
 AUTH_HEADER_DESCRIPTION = "Id del usuario **logeado actualmente**"
@@ -73,6 +74,38 @@ def create_book(book_form: BookForm, session: Session = Depends(get_session)):
     return book
 
 
+@router.get("/books/{book_id}/reviews")
+def get_reviews_for_book(book_id: int, session: Session = Depends(get_session)):
+    book = get_book_by_id(book_id, session)
+    return book.reviews
+
+
+@router.post("/books/{book_id}/reviews")
+def review_book(
+    book_id: int,
+    review_form: ReviewForm,
+    session: Session = Depends(get_session),
+    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
+):
+    user = get_user_by_field("id", auth, session)
+    book = get_book_by_id(book_id, session)
+    query = (
+        select(Review).where(Review.user_id == user.id).where(Review.book_id == book.id)
+    )
+    existing_review = session.exec(query).first()
+
+    if existing_review:
+        existing_review.review = review_form.review
+    else:
+        session.add(Review(review=review_form.review, user=user, book=book))
+
+    session.commit()
+    return {
+        "status": "updated" if existing_review else "created",
+        "review description": review_form.review,
+    }
+
+
 @router.post("/books/{book_id}/ratings")
 def rate_book(
     book_id: int,
@@ -122,36 +155,14 @@ def rate_book(
     }
 
 
-@router.post("/books/{book_id}/reviews")
-def review_book(
+@router.post("/books/{book_id}/quizzes")
+def create_quiz(
     book_id: int,
-    review_form: ReviewForm,
+    quiz_form: QuizForm,
     session: Session = Depends(get_session),
     auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
 ):
-    user = get_user_by_field("id", auth, session)
-    book = get_book_by_id(book_id, session)
-    query = (
-        select(Review).where(Review.user_id == user.id).where(Review.book_id == book.id)
-    )
-    existing_review = session.exec(query).first()
-
-    if existing_review:
-        existing_review.review = review_form.review
-    else:
-        session.add(Review(review=review_form.review, user=user, book=book))
-
-    session.commit()
-    return {
-        "status": "updated" if existing_review else "created",
-        "review description": review_form.review,
-    }
-
-
-@router.get("/books/{book_id}/reviews")
-def get_reviews_for_book(book_id: int, session: Session = Depends(get_session)):
-    book = get_book_by_id(book_id, session)
-    return book.reviews
+    return "Esto es un placeholder, en realidad no hice nada xd"
 
 
 @router.get("/recommended", response_model=list[BookMini])
