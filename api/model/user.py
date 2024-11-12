@@ -26,7 +26,9 @@ class User(UserFormRegister, table=True):
     __tablename__ = "users"
 
     id: Optional[int] = Field(default=None, primary_key=True)
+
     shelves: List[Shelf] = Relationship(back_populates="user")
+    created_books: List["Book"] = Relationship(back_populates="author")
     rated_books: List[Rating] = Relationship(back_populates="user")
     reviewed_books: List[Review] = Relationship(back_populates="user")
     followers: List["User"] = Relationship(

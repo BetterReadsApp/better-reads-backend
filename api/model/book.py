@@ -15,9 +15,10 @@ class BookForm(SQLModel):
     title: str
     summary: str
     genre: BookGenre
-    author: str
     pages: int
     publication_date: date
+    cover_image_url: Optional[str]
+    author_id: int = Field(default=None, foreign_key="users.id")
 
 
 class Book(BookForm, table=True):
@@ -25,6 +26,8 @@ class Book(BookForm, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     average_rating: Optional[float] = Field(default=None)
+    
+    author: Optional["User"] = Relationship(back_populates="created_books")
     ratings: List["Rating"] = Relationship(back_populates="book")
     reviews: List[Review] = Relationship(back_populates="book")
     shelves: List["Shelf"] = Relationship(
@@ -120,7 +123,7 @@ class BookAndShelfForm(SQLModel):
 class BookMini(SQLModel):
     id: int
     title: str
-    author: str
+    author: Optional["UserMini"]
     genre: BookGenre
     publication_date: date
 

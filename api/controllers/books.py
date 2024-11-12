@@ -15,6 +15,7 @@ from api.model.book import BookForm, Book, BookPublic, BookPrivate, BookMini
 from api.model.review import Review, ReviewForm
 from api.model.rating import Rating, RatingForm
 from api.model.quiz import QuizForm
+from api.model.user import User
 
 router = APIRouter(tags=["Books"])
 AUTH_HEADER_DESCRIPTION = "Id del usuario **logeado actualmente**"
@@ -36,8 +37,8 @@ def get_books(
 ):
     query = select(Book)
     if keywords:
-        query = query.where(
-            or_(Book.title.icontains(keywords), Book.author.icontains(keywords))
+        query = query.join(Book.author).where(
+            or_(Book.title.icontains(keywords), User.name.icontains(keywords), User.last_name.icontains(keywords))
         )
     if genre:
         query = query.where(Book.genre == genre)
