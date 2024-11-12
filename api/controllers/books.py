@@ -83,7 +83,7 @@ def create_book(book_form: BookForm, session: Session = Depends(get_session)):
 @router.get("/books/{book_id}/reviews")
 def get_reviews_for_book(book_id: int, session: Session = Depends(get_session)):
     book = get_book_by_id(book_id, session)
-    return book.reviews
+    return BookFormatter.format_reviews(book.reviews)
 
 
 @router.post("/books/{book_id}/reviews")
@@ -108,7 +108,7 @@ def review_book(
     session.commit()
     return {
         "status": "updated" if existing_review else "created",
-        "review description": review_form.review,
+        "review": review_form.review,
     }
 
 
@@ -195,7 +195,7 @@ def get_recommended_books(
             if book not in final_list:
                 final_list.append(book)
 
-    return [BookMini.from_book(book) for book in final_list]
+    return [BookMini.model_validate(book) for book in final_list]
 
 
 def find_recommended_books(books: list[Book], session: Session):
