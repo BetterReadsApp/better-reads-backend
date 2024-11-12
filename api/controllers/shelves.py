@@ -1,9 +1,16 @@
 from typing import Annotated, Union
 from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlmodel import Session, select
-from api.db import get_session, user_exists_by_field, get_book_by_id, get_shelf_by_id
+from api.db import (
+    get_session,
+    user_exists_by_field,
+    get_book_by_id,
+    get_shelf_by_id,
+    get_user_by_field,
+)
 from api.model.shelf import ShelfForm, Shelf, ShelfPublic
 from api.model.book import BookToShelfForm
+from api.formatters.shelf_formatter import ShelfFormatter
 
 router = APIRouter(prefix="/shelves", tags=["Shelves"])
 AUTH_HEADER_DESCRIPTION = "Id del usuario **logeado actualmente**"
@@ -53,12 +60,15 @@ def create_shelf(
     return shelf
 
 
-@router.get("/{shelf_id}", response_model=ShelfPublic)
+@router.get("/{shelf_id}")
 def get_shelf(
     shelf_id: int,
     session: Session = Depends(get_session),
+    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
 ):
-    return get_shelf_by_id(shelf_id, session)
+    user = get_user_by_field("id", str(auth), session) if auth else None
+    shelf = get_shelf_by_id(shelf_id, session)
+    return ShelfFormatter.formatForUser(shelf, user)
 
 
 @router.post("/{shelf_id}/books", response_model=ShelfPublic)

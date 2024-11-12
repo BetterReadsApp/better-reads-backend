@@ -187,12 +187,15 @@ def find_recommended_books(books: list[Book], session: Session):
     for book in get_books_by_genre(books, session):
         if book not in final_set:
             final_set.append(book)
-            
+
     return list(final_set)
 
 
 def filter_by_rating(books: list[Book], user_id: int):
     return [
-        book for book in books
-        if any(rating.user_id == user_id and rating.value >= 3 for rating in book.ratings)
+        book
+        for book in books
+        if any(
+            rating.user_id == user_id and rating.value >= 3 for rating in book.ratings
+        )
     ]
