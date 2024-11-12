@@ -23,13 +23,7 @@ class Shelf(ShelfForm, table=True):
         return book in self.books
 
 
-class ShelfPublic(SQLModel):
-    id: int
-    name: str
-    user_id: int
-    books: List[BookMini]
-
-
 class ShelfMini(SQLModel):
+    id: int
     name: str
     books: List[BookMini]

@@ -8,7 +8,7 @@ from api.db import (
     get_shelf_by_id,
     get_user_by_field,
 )
-from api.model.shelf import ShelfForm, Shelf, ShelfPublic
+from api.model.shelf import ShelfForm, Shelf, ShelfMini
 from api.model.book import BookToShelfForm
 from api.formatters.shelf_formatter import ShelfFormatter
 
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/shelves", tags=["Shelves"])
 AUTH_HEADER_DESCRIPTION = "Id del usuario **logeado actualmente**"
 
 
-@router.get("", response_model=Union[list[Shelf], list[ShelfPublic]])
+@router.get("", response_model=list[Union[Shelf, ShelfMini]])
 def get_shelves(
     name: str | None = None,
     user_id: int | None = None,
@@ -27,7 +27,7 @@ def get_shelves(
     query = query.where(Shelf.user_id == user_id) if user_id else query
     shelves = session.exec(query).all()
     if user_id:
-        shelves = list(map(ShelfPublic.model_validate, shelves)) if shelves else []
+        shelves = list(map(ShelfMini.model_validate, shelves)) if shelves else []
     return shelves
 
 
@@ -68,10 +68,10 @@ def get_shelf(
 ):
     user = get_user_by_field("id", str(auth), session) if auth else None
     shelf = get_shelf_by_id(shelf_id, session)
-    return ShelfFormatter.formatForUser(shelf, user)
+    return ShelfFormatter.format_for_user(shelf, user)
 
 
-@router.post("/{shelf_id}/books", response_model=ShelfPublic)
+@router.post("/{shelf_id}/books", response_model=ShelfMini)
 def add_book_to_shelf(
     shelf_id: int,
     book_to_shelf_form: BookToShelfForm,

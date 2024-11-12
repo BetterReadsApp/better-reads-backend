@@ -1,6 +1,6 @@
 class ShelfFormatter:
     @staticmethod
-    def formatForUser(shelf, user):
+    def format_for_user(shelf, user):
         shelf_dict = {
             "id": shelf.id,
             "name": shelf.name,
