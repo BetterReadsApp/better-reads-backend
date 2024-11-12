@@ -14,7 +14,8 @@ from api.model.enums.book_genre import BookGenre
 from api.model.book import BookForm, Book, BookMini
 from api.model.review import Review, ReviewForm
 from api.model.rating import Rating, RatingForm
-from api.model.quiz import QuizForm
+from api.model.quiz import QuizForm, Quiz
+from api.model.question import Question
 from api.model.user import User
 from api.formatters.book_formatter import BookFormatter
 
@@ -168,7 +169,21 @@ def create_quiz(
     session: Session = Depends(get_session),
     auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
 ):
-    return "Esto es un placeholder, en realidad no hice nada xd"
+    book = get_book_by_id(book_id, session)
+    user = get_user_by_field("id", auth, session)
+    if user.id != book.author.id:
+        raise HTTPException(
+            status_code=403,
+            detail="You must be the author of the book to create a quiz",
+        )
+
+    questions = list(map(Question.model_validate, quiz_form.questions))
+    quiz = Quiz(title=quiz_form.title, book=book, questions=questions)
+
+    session.add(quiz)
+    session.commit()
+    session.refresh(quiz)
+    return quiz
 
 
 @router.get("/recommended", response_model=list[BookMini])

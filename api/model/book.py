@@ -26,6 +26,7 @@ class Book(BookForm, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     average_rating: Optional[float] = Field(default=None)
 
+    quizzes: List["Quiz"] = Relationship(back_populates="book")
     author: Optional["User"] = Relationship(back_populates="created_books")
     ratings: List["Rating"] = Relationship(back_populates="book")
     reviews: List[Review] = Relationship(back_populates="book")
