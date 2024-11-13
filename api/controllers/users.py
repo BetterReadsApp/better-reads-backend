@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, Header, HTTPException, Path, Query
 from sqlmodel import Session
 from api.db import get_session, get_user_by_field, get_users_by_name_and_last_name
-from api.model.user import UserPublic, UserPrivate, UserMini
-from typing import Annotated, Union
+from api.model.user import UserMini
+from api.formatters.user_formatter import UserFormatter
+from typing import Annotated
 
 router = APIRouter(prefix="/users", tags=["Users"])
 AUTH_HEADER_DESCRIPTION = "Id del usuario **logeado actualmente**"
@@ -19,7 +20,7 @@ def get_users(
     return get_users_by_name_and_last_name(name, last_name, session)
 
 
-@router.get("/{user_id}", response_model=Union[UserPrivate, UserPublic])
+@router.get("/{user_id}")  # , response_model=Union[UserPrivate, UserPublic])
 def get_user_by_id(
     user_id: int = Path(description="Id del usuario que **quiero obtener**"),
     session: Session = Depends(get_session),
@@ -27,10 +28,11 @@ def get_user_by_id(
 ):
     user = get_user_by_field("id", user_id, session)
     my_user = get_user_by_field("id", auth, session)
-    user_converter = (
-        UserPublic.from_user if my_user.id != user.id else UserPrivate.from_user
-    )
-    return user_converter(user, auth)
+    # user_converter = (
+    #     UserPublic.from_user if my_user.id != user.id else UserPrivate.from_user
+    # )
+    # return user_converter(user, auth)
+    return UserFormatter.format_for_user(user, my_user)
 
 
 @router.post("/{user_id}/followers")

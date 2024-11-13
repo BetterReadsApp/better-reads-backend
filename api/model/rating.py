@@ -46,7 +46,7 @@ class RaterUser(SQLModel):
 class RatedBook(SQLModel):
     book_id: int
     title: str
-    author: str
+    author: Optional["User"]
     genre: BookGenre
     value: int
 

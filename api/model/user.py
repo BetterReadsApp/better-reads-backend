@@ -7,19 +7,19 @@ from .following import Following
 
 
 class UserBase(SQLModel):
-    name: str = "John"
-    last_name: str = "Doe"
-    email: str = "example@email.com"
+    name: str
+    last_name: str
+    email: str
     is_author: bool = Field(default=False, nullable=False)
 
 
 class UserFormRegister(UserBase):
-    password: str = "s0mepassw0rd"
+    password: str
 
 
 class UserFormLogin(SQLModel):
-    email: str = "example@email.com"
-    password: str = "s0mepassw0rd"
+    email: str
+    password: str
 
 
 class User(UserFormRegister, table=True):
