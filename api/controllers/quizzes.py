@@ -68,14 +68,14 @@ def get_quiz(
 
 @router.put("/{quiz_id}", response_model=QuizResponse)
 def edit_quiz(
-    quizz_id: int,
+    quiz_id: int,
     quiz_update: QuizForm,
     session: Session = Depends(get_session),
-    ):
-    quiz_original = session.exec(select(Quiz).where(Quiz.id == quizz_id)).first()
+):
+    quiz_original = session.exec(select(Quiz).where(Quiz.id == quiz_id)).first()
     if not quiz_original:
         raise HTTPException(status_code=404, detail="Quiz not found")
-    
+
     query = (
         select(Quiz)
         .where(Quiz.book_id == quiz_original.book_id)
@@ -99,7 +99,7 @@ def edit_quiz(
             choice_3=q.choice_3,
             choice_4=q.choice_4,
             correct_choice=q.correct_choice,
-            quiz_id=quiz_original.id
+            quiz_id=quiz_original.id,
         )
         for q in quiz_update.questions
     ]
