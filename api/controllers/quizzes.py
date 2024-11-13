@@ -68,10 +68,52 @@ def create_quiz(
 def get_quiz(
     quizz_id: int,
     session: Session = Depends(get_session),
-    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
 ):
     quiz = session.exec(select(Quiz).where(Quiz.id == quizz_id)).first()
     if not quiz:
         raise HTTPException(status_code=404, detail="Quiz not found")
     
     return quiz
+
+
+@router.put("/quiz/edit/{quizz_id}")
+def edit_quiz(
+    quizz_id: int,
+    quiz_update: QuizForm,
+    session: Session = Depends(get_session),
+    ):
+    quiz_original = session.exec(select(Quiz).where(Quiz.id == quizz_id)).first()
+    if not quiz_original:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+    
+    query = (
+        select(Quiz)
+        .where(Quiz.book_id == quiz_original.book_id)
+        .where(Quiz.id != quiz_original.id)
+        .where(Quiz.title == quiz_update.title)
+    )
+    quiz_with_same_title = session.exec(query).first()
+    if quiz_with_same_title:
+        raise HTTPException(
+            status_code=403,
+            detail="Title already taken by another quiz for the same book",
+        )
+
+    quiz_original.title = quiz_update.title
+    session.query(Question).filter(Question.quiz_id == quiz_original.id).delete()
+    quiz_original.questions = [
+        Question(
+            title=q.title,
+            choice_1=q.choice_1,
+            choice_2=q.choice_2,
+            choice_3=q.choice_3,
+            choice_4=q.choice_4,
+            correct_choice=q.correct_choice,
+            quiz_id=quiz_original.id
+        )
+        for q in quiz_update.questions
+    ]
+
+    session.commit()
+    session.refresh(quiz_original)
+    return quiz_original

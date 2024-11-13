@@ -38,3 +38,4 @@ class QuizResponse(SQLModel):
                 correct_choice=q.correct_choice
             ) for q in quiz.questions]
         )
+    
