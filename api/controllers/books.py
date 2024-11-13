@@ -184,7 +184,7 @@ def get_recommended_books(
             if book not in final_list:
                 final_list.append(book)
 
-    return [BookMini.from_book(book) for book in final_list]
+    return [BookMini.model_validate(book) for book in final_list]
 
 
 def find_recommended_books(books: list[Book], session: Session):

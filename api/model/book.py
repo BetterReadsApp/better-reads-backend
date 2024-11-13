@@ -51,17 +51,18 @@ class BookMini(SQLModel):
     author: Optional["UserMini"]
     genre: BookGenre
     publication_date: date
-    has_quizzes: bool
+    cover_image_url: Optional[str]
+    # has_quizzes: Optional[bool]
 
-    @classmethod
-    def from_book(cls, book: Book):
-        from api.model.user import UserMini
+    # @classmethod
+    # def from_book(cls, book: Book):
+    #     from api.model.user import UserMini
 
-        return cls(
-            id=book.id,
-            title=book.title,
-            author=UserMini.model_validate(book.author) if book.author else None,
-            genre=book.genre,
-            publication_date=book.publication_date,
-            has_quizzes=len(book.quizzes) > 0,
-        )
+    #     return cls(
+    #         id=book.id,
+    #         title=book.title,
+    #         author=UserMini.model_validate(book.author) if book.author else None,
+    #         genre=book.genre,
+    #         publication_date=book.publication_date,
+    #         has_quizzes=len(book.quizzes) > 0,
+    #     )

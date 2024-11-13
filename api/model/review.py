@@ -24,7 +24,7 @@ class Review(ReviewForm, table=True):
 class ReviewedBook(SQLModel):
     book_id: int
     title: str
-    author: str
+    author: Optional["User"]
     genre: BookGenre
     review: str
 

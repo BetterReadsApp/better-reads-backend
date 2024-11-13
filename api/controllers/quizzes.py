@@ -71,10 +71,24 @@ def edit_quiz(
     quiz_id: int,
     quiz_update: QuizForm,
     session: Session = Depends(get_session),
+    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
 ):
+    if len(quiz_update.questions) < MIN_QUESTIONS_PER_QUIZ:
+        raise HTTPException(
+            status_code=400,
+            detail=f"A quiz should have at least {MIN_QUESTIONS_PER_QUIZ} question",
+        )
+
     quiz_original = session.exec(select(Quiz).where(Quiz.id == quiz_id)).first()
     if not quiz_original:
         raise HTTPException(status_code=404, detail="Quiz not found")
+
+    user = get_user_by_field("id", auth, session)
+    if user.id != quiz_original.book.author.id:
+        raise HTTPException(
+            status_code=401,
+            detail="You must be the author of the book to edit the quiz",
+        )
 
     query = (
         select(Quiz)
