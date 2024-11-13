@@ -16,6 +16,7 @@ app.include_router(books.router)
 app.include_router(shelves.router)
 app.include_router(quizzes.router)
 
+
 @app.on_event("startup")
 def on_startup():
     init_db()

@@ -5,6 +5,7 @@ from .question import QuestionForm
 
 class QuizForm(SQLModel):
     title: str
+    book_id: int
     questions: List[QuestionForm]
 
 
@@ -29,12 +30,15 @@ class QuizResponse(SQLModel):
         return cls(
             title=quiz.title,
             book_id=quiz.book_id,
-            questions=[QuestionForm(
-                title=q.title,
-                choice_1=q.choice_1,
-                choice_2=q.choice_2,
-                choice_3=q.choice_3,
-                choice_4=q.choice_4,
-                correct_choice=q.correct_choice
-            ) for q in quiz.questions]
+            questions=[
+                QuestionForm(
+                    title=q.title,
+                    choice_1=q.choice_1,
+                    choice_2=q.choice_2,
+                    choice_3=q.choice_3,
+                    choice_4=q.choice_4,
+                    correct_choice=q.correct_choice,
+                )
+                for q in quiz.questions
+            ],
         )
