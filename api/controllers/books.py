@@ -14,14 +14,11 @@ from api.model.enums.book_genre import BookGenre
 from api.model.book import BookForm, Book, BookMini
 from api.model.review import Review, ReviewForm
 from api.model.rating import Rating, RatingForm
-from api.model.quiz import QuizForm, Quiz
-from api.model.question import Question
 from api.model.user import User
 from api.formatters.book_formatter import BookFormatter
 
 router = APIRouter(tags=["Books"])
 AUTH_HEADER_DESCRIPTION = "Id del usuario **logeado actualmente**"
-MIN_QUESTIONS_PER_QUIZ = 1
 
 
 @router.get("/books", response_model=list[BookMini])
@@ -187,7 +184,7 @@ def get_recommended_books(
             if book not in final_list:
                 final_list.append(book)
 
-    return [BookMini.model_validate(book) for book in final_list]
+    return [BookMini.from_book(book) for book in final_list]
 
 
 def find_recommended_books(books: list[Book], session: Session):

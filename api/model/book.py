@@ -1,6 +1,7 @@
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship
 from datetime import date
+
 from .review import Review
 from .book_shelf_link import BookShelfLink
 from .enums.book_genre import BookGenre
@@ -50,4 +51,17 @@ class BookMini(SQLModel):
     author: Optional["UserMini"]
     genre: BookGenre
     publication_date: date
-    has_quizzes: int
+    has_quizzes: bool
+
+    @classmethod
+    def from_book(cls, book: Book):
+        from api.model.user import UserMini
+
+        return cls(
+            id=book.id,
+            title=book.title,
+            author=UserMini.model_validate(book.author) if book.author else None,
+            genre=book.genre,
+            publication_date=book.publication_date,
+            has_quizzes=len(book.quizzes) > 0,
+        )
