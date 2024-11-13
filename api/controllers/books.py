@@ -163,46 +163,6 @@ def rate_book(
     }
 
 
-@router.post("/books/{book_id}/quizzes")
-def create_quiz(
-    book_id: int,
-    quiz_form: QuizForm,
-    session: Session = Depends(get_session),
-    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
-):
-    if len(quiz_form.questions) < MIN_QUESTIONS_PER_QUIZ:
-        raise HTTPException(
-            status_code=400,
-            detail=f"A quiz should have at least {MIN_QUESTIONS_PER_QUIZ} question",
-        )
-
-    book = get_book_by_id(book_id, session)
-    user = get_user_by_field("id", auth, session)
-    if user.id != book.author.id:
-        raise HTTPException(
-            status_code=401,
-            detail="You must be the author of the book to create a quiz",
-        )
-
-    query = (
-        select(Quiz).where(Quiz.book_id == book_id).where(Quiz.title == quiz_form.title)
-    )
-    quiz_with_same_title = session.exec(query).first()
-    if quiz_with_same_title:
-        raise HTTPException(
-            status_code=403,
-            detail="Title already taken by another quiz for the same book",
-        )
-
-    questions = list(map(Question.model_validate, quiz_form.questions))
-    quiz = Quiz(title=quiz_form.title, book=book, questions=questions)
-
-    session.add(quiz)
-    session.commit()
-    session.refresh(quiz)
-    return quiz
-
-
 @router.get("/recommended", response_model=list[BookMini])
 def get_recommended_books(
     auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,

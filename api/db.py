@@ -1,3 +1,4 @@
+from api.model.quiz import Quiz
 from api.model.rating import Rating
 from api.settings import DATABASE_URL
 from sqlmodel import create_engine, SQLModel, Session, select, or_
@@ -92,6 +93,14 @@ def get_books_by_genre(books: list[Book], session: Session):
         query = select(Book).where(Book.genre == book.genre)
         new_books.extend(session.exec(query).all())
     return new_books
+
+
+def get_quizz_by_id(quizz_id: int, session: Session):
+    query = select(Quiz).where(Quiz.id == quizz_id)
+    quizz = session.exec(query).first()
+    if not quizz:
+        raise HTTPException(status_code=404, detail="Quizz not found")
+    return quizz
 
 
 def create_books(engine):

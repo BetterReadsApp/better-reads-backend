@@ -12,6 +12,7 @@ class BookFormatter:
             book_dict["your_review"] = cls.get_user_review(user, book.reviews)
         book_dict["ratings"] = cls.format_ratings(book.ratings)
         book_dict["reviews"] = cls.format_reviews(book.reviews)
+        book_dict["has_quizzes"] = len(book.quizzes) > 0
         book_dict.pop("author_id")
         return book_dict
 

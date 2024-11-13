@@ -50,3 +50,4 @@ class BookMini(SQLModel):
     author: Optional["UserMini"]
     genre: BookGenre
     publication_date: date
+    has_quizzes: int
