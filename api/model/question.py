@@ -3,12 +3,12 @@ from typing import Optional
 
 
 class QuestionForm(SQLModel):
-    title: str = "¿Cuál es la peor de las maldiciones imperdonables?"
-    choice_1: str = "Reducto"
-    choice_2: str = "Crucio"
-    choice_3: str = "Imperio"
-    choice_4: str = "Avada Kedavra"
-    correct_choice: int = 4
+    title: str
+    choice_1: str
+    choice_2: str
+    choice_3: str
+    choice_4: str
+    correct_choice: int
 
 
 class Question(QuestionForm, table=True):
