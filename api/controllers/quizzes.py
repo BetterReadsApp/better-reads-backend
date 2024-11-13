@@ -2,31 +2,20 @@ from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlmodel import Session, select
 from typing import Annotated
 from api.db import (
-    get_books_by_authors,
-    get_books_by_genre,
-    get_quizz_by_id,
-    get_rated_books_by_user_id,
-    get_read_books_by_user_id,
     get_session,
     get_book_by_id,
     get_user_by_field,
 )
-from api.model.enums.book_genre import BookGenre
-from api.model.book import BookForm, Book, BookMini
-from api.model.review import Review, ReviewForm
-from api.model.rating import Rating, RatingForm
 from api.model.quiz import QuizForm, Quiz, QuizResponse
 from api.model.question import Question
-from api.model.user import User
-from api.formatters.book_formatter import BookFormatter
 
-router = APIRouter(tags=["Quizz"])
+router = APIRouter(prefix="/quizzes", tags=["Quizzes"])
 AUTH_HEADER_DESCRIPTION = "Id del usuario **logeado actualmente**"
 MIN_QUESTIONS_PER_QUIZ = 1
 
-@router.post("/books/{book_id}/quizzes")
+
+@router.post("")
 def create_quiz(
-    book_id: int,
     quiz_form: QuizForm,
     session: Session = Depends(get_session),
     auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
@@ -37,7 +26,7 @@ def create_quiz(
             detail=f"A quiz should have at least {MIN_QUESTIONS_PER_QUIZ} question",
         )
 
-    book = get_book_by_id(book_id, session)
+    book = get_book_by_id(quiz_form.book_id, session)
     user = get_user_by_field("id", auth, session)
     if user.id != book.author.id:
         raise HTTPException(
@@ -46,7 +35,9 @@ def create_quiz(
         )
 
     query = (
-        select(Quiz).where(Quiz.book_id == book_id).where(Quiz.title == quiz_form.title)
+        select(Quiz)
+        .where(Quiz.book_id == quiz_form.book_id)
+        .where(Quiz.title == quiz_form.title)
     )
     quiz_with_same_title = session.exec(query).first()
     if quiz_with_same_title:
@@ -64,15 +55,14 @@ def create_quiz(
     return quiz
 
 
-@router.get("/quiz/{book_id}", response_model=QuizResponse)
+@router.get("/{quiz_id}", response_model=QuizResponse)
 def get_quiz(
-    quizz_id: int,
+    quiz_id: int,
     session: Session = Depends(get_session),
 ):
-    quiz = session.exec(select(Quiz).where(Quiz.id == quizz_id)).first()
+    quiz = session.exec(select(Quiz).where(Quiz.id == quiz_id)).first()
     if not quiz:
         raise HTTPException(status_code=404, detail="Quiz not found")
-    
     return quiz
 
 

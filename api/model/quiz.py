@@ -5,6 +5,7 @@ from .question import QuestionForm
 
 class QuizForm(SQLModel):
     title: str
+    book_id: int
     questions: List[QuestionForm]
 
 
