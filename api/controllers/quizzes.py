@@ -66,7 +66,7 @@ def get_quiz(
     return quiz
 
 
-@router.put("/quiz/edit/{quizz_id}")
+@router.put("/{quiz_id}", response_model=QuizResponse)
 def edit_quiz(
     quizz_id: int,
     quiz_update: QuizForm,
