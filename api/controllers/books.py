@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from sqlmodel import Session, select, or_, extract
-from api.model.review import Review, ReviewForm
+from typing import Annotated
 from api.db import (
     get_books_by_authors,
     get_books_by_genre,
@@ -10,13 +10,18 @@ from api.db import (
     get_book_by_id,
     get_user_by_field,
 )
-from api.model.book import BookForm, Book, BookPublic, BookPrivate, BookMini
-from api.model.rating import Rating, RatingForm
 from api.model.enums.book_genre import BookGenre
-from typing import Annotated, Union
+from api.model.book import BookForm, Book, BookMini
+from api.model.review import Review, ReviewForm
+from api.model.rating import Rating, RatingForm
+from api.model.quiz import QuizForm, Quiz
+from api.model.question import Question
+from api.model.user import User
+from api.formatters.book_formatter import BookFormatter
 
 router = APIRouter(tags=["Books"])
 AUTH_HEADER_DESCRIPTION = "Id del usuario **logeado actualmente**"
+MIN_QUESTIONS_PER_QUIZ = 1
 
 
 @router.get("/books", response_model=list[BookMini])
@@ -35,8 +40,12 @@ def get_books(
 ):
     query = select(Book)
     if keywords:
-        query = query.where(
-            or_(Book.title.icontains(keywords), Book.author.icontains(keywords))
+        query = query.join(Book.author).where(
+            or_(
+                Book.title.icontains(keywords),
+                User.name.icontains(keywords),
+                User.last_name.icontains(keywords),
+            )
         )
     if genre:
         query = query.where(Book.genre == genre)
@@ -48,29 +57,61 @@ def get_books(
     return session.exec(query).all()
 
 
-@router.get("/books/{book_id}", response_model=Union[BookPublic, BookPrivate])
+@router.get("/books/{book_id}")
 def get_book(
     book_id: int,
     session: Session = Depends(get_session),
     auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
 ):
+    user = get_user_by_field("id", auth, session) if auth else None
     book = get_book_by_id(book_id, session)
-    if auth:
-        user = get_user_by_field("id", auth, session)
-        book = BookPrivate.from_book(book)
-        book.load_info_for(user)
-    else:
-        book = BookPublic.from_book(book)
-    return book
+    return BookFormatter.format_for_user(book, user)
 
 
 @router.post("/books")
 def create_book(book_form: BookForm, session: Session = Depends(get_session)):
+    user = get_user_by_field("id", book_form.author_id, session)
+    if not user.is_author:
+        raise HTTPException(
+            status_code=403, detail="You must be an author to create a book"
+        )
     book = Book.model_validate(book_form)
     session.add(book)
     session.commit()
     session.refresh(book)
     return book
+
+
+@router.get("/books/{book_id}/reviews")
+def get_reviews_for_book(book_id: int, session: Session = Depends(get_session)):
+    book = get_book_by_id(book_id, session)
+    return BookFormatter.format_reviews(book.reviews)
+
+
+@router.post("/books/{book_id}/reviews")
+def review_book(
+    book_id: int,
+    review_form: ReviewForm,
+    session: Session = Depends(get_session),
+    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
+):
+    user = get_user_by_field("id", auth, session)
+    book = get_book_by_id(book_id, session)
+    query = (
+        select(Review).where(Review.user_id == user.id).where(Review.book_id == book.id)
+    )
+    existing_review = session.exec(query).first()
+
+    if existing_review:
+        existing_review.review = review_form.review
+    else:
+        session.add(Review(review=review_form.review, user=user, book=book))
+
+    session.commit()
+    return {
+        "status": "updated" if existing_review else "created",
+        "review": review_form.review,
+    }
 
 
 @router.post("/books/{book_id}/ratings")
@@ -122,38 +163,6 @@ def rate_book(
     }
 
 
-@router.post("/books/{book_id}/reviews")
-def review_book(
-    book_id: int,
-    review_form: ReviewForm,
-    session: Session = Depends(get_session),
-    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
-):
-    user = get_user_by_field("id", auth, session)
-    book = get_book_by_id(book_id, session)
-    query = (
-        select(Review).where(Review.user_id == user.id).where(Review.book_id == book.id)
-    )
-    existing_review = session.exec(query).first()
-
-    if existing_review:
-        existing_review.review = review_form.review
-    else:
-        session.add(Review(review=review_form.review, user=user, book=book))
-
-    session.commit()
-    return {
-        "status": "updated" if existing_review else "created",
-        "review description": review_form.review,
-    }
-
-
-@router.get("/books/{book_id}/reviews")
-def get_reviews_for_book(book_id: int, session: Session = Depends(get_session)):
-    book = get_book_by_id(book_id, session)
-    return book.reviews
-
-
 @router.get("/recommended", response_model=list[BookMini])
 def get_recommended_books(
     auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
@@ -178,7 +187,7 @@ def get_recommended_books(
             if book not in final_list:
                 final_list.append(book)
 
-    return [BookMini.from_book(book) for book in final_list]
+    return [BookMini.model_validate(book) for book in final_list]
 
 
 def find_recommended_books(books: list[Book], session: Session):

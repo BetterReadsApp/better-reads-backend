@@ -1,23 +1,14 @@
+from api.model.user import UserMini
+
+
 class ShelfFormatter:
     @staticmethod
-    def formatForUser(shelf, user):
-        shelf_dict = {
-            "id": shelf.id,
-            "name": shelf.name,
-            "user_id": shelf.user_id,
-            "books": [],
-        }
+    def format_for_user(shelf, user):
+        shelf_dict = shelf.__dict__
+        shelf_dict_books = []
         for book in shelf.books:
-            book_dict = {
-                "id": book.id,
-                "title": book.title,
-                "author": book.author,
-                "genre": book.genre,
-                "pages": book.pages,
-                "publication_date": book.publication_date,
-                "average_rating": book.average_rating,
-                "total_ratings": len(book.ratings),
-            }
+            book_dict = book.__dict__
+            book_dict["total_ratings"] = len(book.ratings)
             if user:
                 book_dict["your_rating"] = next(
                     (
@@ -27,5 +18,11 @@ class ShelfFormatter:
                     ),
                     None,
                 )
-            shelf_dict["books"].append(book_dict)
+            book_dict["author"] = UserMini.model_validate(book.author)
+            book_dict.pop("ratings")
+            book_dict.pop("genre")
+            book_dict.pop("author_id")
+            book_dict.pop("summary")
+            shelf_dict_books.append(book_dict)
+        shelf_dict["books"] = shelf_dict_books
         return shelf_dict
