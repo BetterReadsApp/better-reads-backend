@@ -63,5 +63,5 @@ class BookMini(SQLModel):
             author=UserMini.model_validate(book.author) if book.author else None,
             genre=book.genre,
             publication_date=book.publication_date,
-            has_quizzes=len(book.quizzes)>0,
+            has_quizzes=len(book.quizzes) > 0,
         )
