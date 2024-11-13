@@ -8,7 +8,7 @@ class QuestionForm(SQLModel):
     choice_2: str
     choice_3: str
     choice_4: str
-    correct_choice: int
+    correct_choice: int = Field(ge=1, le=4)
 
 
 class Question(QuestionForm, table=True):
