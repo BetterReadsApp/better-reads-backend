@@ -1,14 +1,11 @@
 from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlmodel import Session, select
 from typing import Annotated
-from api.db import (
-    get_session,
-    get_book_by_id,
-    get_user_by_field,
-)
+from api.db import get_session, get_book_by_id, get_user_by_field, get_quiz_by_id
 from api.model.quiz import QuizForm, Quiz, QuizResponse
 from api.model.question import Question
 from api.model.answer import QuizAnswerForm, Answer
+from api.formatters.quiz_formatter import QuizFormatter
 
 router = APIRouter(prefix="/quizzes", tags=["Quizzes"])
 AUTH_HEADER_DESCRIPTION = "Id del usuario **logeado actualmente**"
@@ -61,10 +58,7 @@ def get_quiz(
     quiz_id: int,
     session: Session = Depends(get_session),
 ):
-    quiz = session.exec(select(Quiz).where(Quiz.id == quiz_id)).first()
-    if not quiz:
-        raise HTTPException(status_code=404, detail="Quiz not found")
-    return quiz
+    return get_quiz_by_id(quiz_id, session)
 
 
 @router.put("/{quiz_id}", response_model=QuizResponse)
@@ -80,9 +74,7 @@ def edit_quiz(
             detail=f"A quiz should have at least {MIN_QUESTIONS_PER_QUIZ} question",
         )
 
-    quiz_original = session.exec(select(Quiz).where(Quiz.id == quiz_id)).first()
-    if not quiz_original:
-        raise HTTPException(status_code=404, detail="Quiz not found")
+    quiz_original = get_quiz_by_id(quiz_id, session)
 
     user = get_user_by_field("id", auth, session)
     if user.id != quiz_original.book.author.id:
@@ -124,6 +116,17 @@ def edit_quiz(
     return quiz_original
 
 
+@router.get("/{quiz_id}/answers")
+def get_quiz_answer(
+    quiz_id: int,
+    session: Session = Depends(get_session),
+    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
+):
+    user = get_user_by_field("id", auth, session)
+    quiz = get_quiz_by_id(quiz_id, session)
+    return QuizFormatter.format_answer_for_user(quiz, user)
+
+
 @router.post("/{quiz_id}/answers")
 def answer_quiz(
     quiz_id: int,
@@ -132,9 +135,7 @@ def answer_quiz(
     auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
 ):
     user = get_user_by_field("id", auth, session)
-    quiz = session.exec(select(Quiz).where(Quiz.id == quiz_id)).first()
-    if not quiz:
-        raise HTTPException(status_code=404, detail="Quiz not found")
+    quiz = get_quiz_by_id(quiz_id, session)
 
     if any(answer.question.quiz_id == quiz_id for answer in user.questions_answered):
         raise HTTPException(status_code=403, detail="You already answered this quiz")
