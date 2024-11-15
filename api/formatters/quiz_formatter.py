@@ -19,7 +19,7 @@ class QuizFormatter:
             )
         )
         quiz_dict = quiz.__dict__
-        quiz_dict["questions_answered"] = [] if user_answers else None
+        quiz_dict["questions_answered"] = []
         for answer in user_answers:
             answer_dict = {"selected_choice": answer.selected_choice}
             answer_dict.update(answer.question)
