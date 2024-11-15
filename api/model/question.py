@@ -19,3 +19,7 @@ class Question(QuestionForm, table=True):
 
     quiz: Optional["Quiz"] = Relationship(back_populates="questions")
     answers: List["Answer"] = Relationship(back_populates="question")
+
+
+class QuestionWithId(QuestionForm):
+    id: int

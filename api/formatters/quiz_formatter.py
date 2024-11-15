@@ -1,6 +1,17 @@
+from api.model.question import QuestionWithId
+
+
 class QuizFormatter:
     @classmethod
-    def format_answer_for_user(cls, quiz, user):
+    def format(cls, quiz):
+        quiz_dict = quiz.__dict__
+        quiz_dict["questions"] = list(
+            map(QuestionWithId.model_validate, quiz.questions)
+        )
+        return quiz_dict
+
+    @classmethod
+    def format_answer(cls, quiz, user):
         user_answers = list(
             filter(
                 lambda answer: answer.question.quiz_id == quiz.id,
