@@ -31,6 +31,7 @@ class User(UserFormRegister, table=True):
     created_books: List["Book"] = Relationship(back_populates="author")
     rated_books: List[Rating] = Relationship(back_populates="user")
     reviewed_books: List[Review] = Relationship(back_populates="user")
+    questions_answered: List["Answer"] = Relationship(back_populates="user")
     followers: List["User"] = Relationship(
         back_populates="following",
         link_model=Following,

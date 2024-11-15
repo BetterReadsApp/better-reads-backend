@@ -20,7 +20,7 @@ def get_users(
     return get_users_by_name_and_last_name(name, last_name, session)
 
 
-@router.get("/{user_id}")  # , response_model=Union[UserPrivate, UserPublic])
+@router.get("/{user_id}")
 def get_user_by_id(
     user_id: int = Path(description="Id del usuario que **quiero obtener**"),
     session: Session = Depends(get_session),
@@ -28,10 +28,6 @@ def get_user_by_id(
 ):
     user = get_user_by_field("id", user_id, session)
     my_user = get_user_by_field("id", auth, session)
-    # user_converter = (
-    #     UserPublic.from_user if my_user.id != user.id else UserPrivate.from_user
-    # )
-    # return user_converter(user, auth)
     return UserFormatter.format_for_user(user, my_user)
 
 
