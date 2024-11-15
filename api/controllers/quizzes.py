@@ -125,6 +125,12 @@ def get_quiz_answer(
 ):
     user = get_user_by_field("id", auth, session)
     quiz = get_quiz_by_id(quiz_id, session)
+    if not any(
+        answer.question.quiz_id == quiz_id for answer in user.questions_answered
+    ):
+        raise HTTPException(
+            status_code=404, detail="You haven't answered this quiz yet"
+        )
     return QuizFormatter.format_answer(quiz, user)
 
 
