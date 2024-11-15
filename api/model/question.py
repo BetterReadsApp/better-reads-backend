@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel, Field, Relationship
-from typing import Optional
+from typing import Optional, List
 
 
 class QuestionForm(SQLModel):
@@ -18,3 +18,4 @@ class Question(QuestionForm, table=True):
     quiz_id: Optional[int] = Field(default=None, foreign_key="quizzes.id")
 
     quiz: Optional["Quiz"] = Relationship(back_populates="questions")
+    answers: List["Answer"] = Relationship(back_populates="question")

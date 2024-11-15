@@ -8,6 +8,7 @@ from api.db import (
 )
 from api.model.quiz import QuizForm, Quiz, QuizResponse
 from api.model.question import Question
+from api.model.answer import QuizAnswerForm, Answer
 
 router = APIRouter(prefix="/quizzes", tags=["Quizzes"])
 AUTH_HEADER_DESCRIPTION = "Id del usuario **logeado actualmente**"
@@ -121,3 +122,42 @@ def edit_quiz(
     session.commit()
     session.refresh(quiz_original)
     return quiz_original
+
+
+@router.post("/{quiz_id}/answers")
+def answer_quiz(
+    quiz_id: int,
+    quiz_answer: QuizAnswerForm,
+    session: Session = Depends(get_session),
+    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
+):
+    user = get_user_by_field("id", auth, session)
+    quiz = session.exec(select(Quiz).where(Quiz.id == quiz_id)).first()
+    if not quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found")
+
+    if any(answer.question.quiz_id == quiz_id for answer in user.questions_answered):
+        raise HTTPException(status_code=403, detail="You already answered this quiz")
+
+    if len(quiz.questions) != len(quiz_answer.answers):
+        raise HTTPException(
+            status_code=400, detail="You must answer all quiz questions at once"
+        )
+
+    questions_dict = {question.id: question for question in quiz.questions}
+
+    for answer_form in quiz_answer.answers:
+        answer = Answer.model_validate(answer_form)
+        answer.user = user
+        try:
+            question = questions_dict[answer.question_id]
+        except KeyError:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Question with id {answer.question_id} does not belong to this quiz",
+            )
+        question.answers.append(answer)
+
+    session.add(quiz)
+    session.commit()
+    return {"detail": "Quiz answered successfully"}
