@@ -130,3 +130,7 @@ class UserPublic(UserMini):
             following=user.following,
             is_following=is_following,
         )
+
+class UserUpdate(SQLModel):
+    name: str
+    last_name: str

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Header, HTTPException, Path, Query
 from sqlmodel import Session
 from api.db import get_session, get_user_by_field, get_users_by_name_and_last_name
-from api.model.user import UserMini
+from api.model.user import UserMini, UserUpdate
 from api.formatters.user_formatter import UserFormatter
 from typing import Annotated
 
@@ -73,3 +73,18 @@ def unfollow_user(
     session.add(follower_user)
     session.commit()
     return {"detail": "User unfollowed successfully"}
+
+@router.put("/{user_id}")
+def edit_user_profile(
+    new_user: UserUpdate,
+    session: Session = Depends(get_session),
+    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
+    ):
+    user = get_user_by_field("id", auth, session)
+
+    user.name = new_user.name
+    user.last_name = new_user.last_name
+
+    session.commit()
+    session.refresh(user)
+    return UserFormatter.format_for_user(user, user)
