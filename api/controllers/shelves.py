@@ -93,6 +93,7 @@ def add_book_to_shelf(
     session.refresh(shelf)
     return shelf
 
+
 @router.put("/{shelf_id}")
 def edit_shelf(
     shelf_id: int,
@@ -113,6 +114,29 @@ def edit_shelf(
     session.commit()
     session.refresh(shelf)
     return shelf
+
+
+@router.delete("/{shelf_id}/books")
+def delete_book_from_shelf(
+    shelf_id: int,
+    book_to_shelf_form: BookToShelfForm,
+    session: Session = Depends(get_session),
+    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
+):
+    shelf = find_shelf(session, shelf_id)
+    verify_user(shelf.user_id, auth, "You cannot remove a book from a shelf that's not yours")
+
+    book = get_book_by_id(book_to_shelf_form.book_id, session)
+    if not shelf.contains(book):
+        raise HTTPException(
+            status_code=403, detail="The book doesn't belong to that shelf"
+        )
+    
+    shelf.delete(book)
+    session.add(shelf)
+    session.commit()
+    return {"detail": "Book removed succesfully"}
+    
 
 def verify_user(id, auth, error):
     if id != auth:
