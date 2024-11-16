@@ -60,6 +60,26 @@ def create_shelf(
     return shelf
 
 
+@router.delete("/{shelf_id}")
+def delete_shelf(
+    shelf_id: int,
+    session: Session = Depends(get_session),
+    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
+):
+    shelf = find_shelf(session, shelf_id)
+    verify_user(shelf.user_id, auth, "You cannot remove a book from a shelf that's not yours")
+
+    not_editable = ["To Read", "Currently Reading", "Read"]
+    if shelf.name in not_editable:
+        raise HTTPException(
+            status_code=403, detail="You cannot delete a default shelf"
+        )
+    
+    session.delete(shelf)
+    session.commit()
+    return {"detail": "Shelf removed succesfully"}
+
+
 @router.get("/{shelf_id}")
 def get_shelf(
     shelf_id: int,
@@ -94,6 +114,28 @@ def add_book_to_shelf(
     return shelf
 
 
+@router.delete("/{shelf_id}/books")
+def delete_book_from_shelf(
+    shelf_id: int,
+    book_to_shelf_form: BookToShelfForm,
+    session: Session = Depends(get_session),
+    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
+):
+    shelf = find_shelf(session, shelf_id)
+    verify_user(shelf.user_id, auth, "You cannot remove a book from a shelf that's not yours")
+
+    book = get_book_by_id(book_to_shelf_form.book_id, session)
+    if not shelf.contains(book):
+        raise HTTPException(
+            status_code=403, detail="The book doesn't belong to that shelf"
+        )
+    
+    shelf.delete(book)
+    session.add(shelf)
+    session.commit()
+    return {"detail": "Book removed succesfully"}
+
+
 @router.put("/{shelf_id}")
 def edit_shelf(
     shelf_id: int,
@@ -115,28 +157,6 @@ def edit_shelf(
     session.refresh(shelf)
     return shelf
 
-
-@router.delete("/{shelf_id}/books")
-def delete_book_from_shelf(
-    shelf_id: int,
-    book_to_shelf_form: BookToShelfForm,
-    session: Session = Depends(get_session),
-    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
-):
-    shelf = find_shelf(session, shelf_id)
-    verify_user(shelf.user_id, auth, "You cannot remove a book from a shelf that's not yours")
-
-    book = get_book_by_id(book_to_shelf_form.book_id, session)
-    if not shelf.contains(book):
-        raise HTTPException(
-            status_code=403, detail="The book doesn't belong to that shelf"
-        )
-    
-    shelf.delete(book)
-    session.add(shelf)
-    session.commit()
-    return {"detail": "Book removed succesfully"}
-    
 
 def verify_user(id, auth, error):
     if id != auth:
