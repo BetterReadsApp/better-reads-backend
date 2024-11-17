@@ -127,6 +127,8 @@ def review_book(
 ):
     user = get_user_by_field("id", auth, session)
     book = get_book_by_id(book_id, session)
+    compare_user_and_author(user.id, book.author.id, "You cannot review your own book")
+    
     query = (
         select(Review).where(Review.user_id == user.id).where(Review.book_id == book.id)
     )
@@ -159,6 +161,8 @@ def rate_book(
 
     user = get_user_by_field("id", auth, session)
     book = get_book_by_id(book_id, session)
+    compare_user_and_author(user.id, book.author.id, "You cannot rate your own book")
+    
     query = (
         select(Rating).where(Rating.user_id == user.id).where(Rating.book_id == book.id)
     )
@@ -236,3 +240,10 @@ def filter_by_rating(books: list[Book], user_id: int):
             rating.user_id == user_id and rating.value >= 3 for rating in book.ratings
         )
     ]
+
+def compare_user_and_author(user_id: int, author_id: int, err_msg: str):
+    if user_id == author_id:
+        raise HTTPException(
+            status_code=401,
+            detail=err_msg,
+        )
