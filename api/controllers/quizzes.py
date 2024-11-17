@@ -144,6 +144,12 @@ def answer_quiz(
     user = get_user_by_field("id", auth, session)
     quiz = get_quiz_by_id(quiz_id, session)
 
+    if user.id == quiz.book.author_id:
+        raise HTTPException(
+            status_code=401,
+            detail="You cannot answer your own quiz",
+        )
+
     if any(answer.question.quiz_id == quiz_id for answer in user.questions_answered):
         raise HTTPException(status_code=403, detail="You already answered this quiz")
 
