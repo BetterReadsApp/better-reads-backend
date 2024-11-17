@@ -60,26 +60,6 @@ def create_shelf(
     return shelf
 
 
-@router.delete("/{shelf_id}")
-def delete_shelf(
-    shelf_id: int,
-    session: Session = Depends(get_session),
-    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
-):
-    shelf = find_shelf(session, shelf_id)
-    verify_user(
-        shelf.user_id, auth, "You cannot remove a book from a shelf that's not yours"
-    )
-
-    not_editable = ["To Read", "Currently Reading", "Read"]
-    if shelf.name in not_editable:
-        raise HTTPException(status_code=403, detail="You cannot delete a default shelf")
-
-    session.delete(shelf)
-    session.commit()
-    return {"detail": "Shelf removed succesfully"}
-
-
 @router.get("/{shelf_id}")
 def get_shelf(
     shelf_id: int,
@@ -89,6 +69,58 @@ def get_shelf(
     user = get_user_by_field("id", str(auth), session) if auth else None
     shelf = get_shelf_by_id(shelf_id, session)
     return ShelfFormatter.format_for_user(shelf, user)
+
+
+@router.put("/{shelf_id}")
+def edit_shelf(
+    shelf_id: int,
+    new_shelf: ShelfForm,
+    session: Session = Depends(get_session),
+    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
+):
+    shelf = find_shelf(session, shelf_id)
+    verify_user(shelf.user_id, auth, "You cannot edit a shelf that's not yours")
+
+    not_editable = ["To Read", "Currently Reading", "Read"]
+    if new_shelf.name in not_editable or shelf.name in not_editable:
+        raise HTTPException(
+            status_code=403, detail="You cannot use or edit a default shelf's name"
+        )
+
+    shelf.name = new_shelf.name
+    session.commit()
+    session.refresh(shelf)
+    return shelf
+
+
+def verify_user(id, auth, error):
+    if id != auth:
+        raise HTTPException(status_code=403, detail=error)
+
+
+def find_shelf(session, shelf_id):
+    shelf = session.exec(select(Shelf).where(Shelf.id == shelf_id)).first()
+    if not shelf:
+        raise HTTPException(status_code=404, detail="Shelf not found")
+    return shelf
+
+
+@router.delete("/{shelf_id}")
+def delete_shelf(
+    shelf_id: int,
+    session: Session = Depends(get_session),
+    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
+):
+    shelf = find_shelf(session, shelf_id)
+    verify_user(shelf.user_id, auth, "You cannot remove a shelf that's not yours")
+
+    not_editable = ["To Read", "Currently Reading", "Read"]
+    if shelf.name in not_editable:
+        raise HTTPException(status_code=403, detail="You cannot delete a default shelf")
+
+    session.delete(shelf)
+    session.commit()
+    return {"detail": "Shelf removed succesfully"}
 
 
 @router.post("/{shelf_id}/books", response_model=ShelfMini)
@@ -138,37 +170,3 @@ def delete_book_from_shelf(
     session.add(shelf)
     session.commit()
     return {"detail": "Book removed succesfully"}
-
-
-@router.put("/{shelf_id}")
-def edit_shelf(
-    shelf_id: int,
-    new_shelf: ShelfForm,
-    session: Session = Depends(get_session),
-    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
-):
-    shelf = find_shelf(session, shelf_id)
-    verify_user(shelf.user_id, auth, "You cannot edit a shelf that's not yours")
-
-    not_editable = ["To Read", "Currently Reading", "Read"]
-    if new_shelf.name in not_editable or shelf.name in not_editable:
-        raise HTTPException(
-            status_code=403, detail="You cannot use or edit a default shelf's name"
-        )
-
-    shelf.name = new_shelf.name
-    session.commit()
-    session.refresh(shelf)
-    return shelf
-
-
-def verify_user(id, auth, error):
-    if id != auth:
-        raise HTTPException(status_code=403, detail=error)
-
-
-def find_shelf(session, shelf_id):
-    shelf = session.exec(select(Shelf).where(Shelf.id == shelf_id)).first()
-    if not shelf:
-        raise HTTPException(status_code=404, detail="Shelf not found")
-    return shelf
