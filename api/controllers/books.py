@@ -11,7 +11,7 @@ from api.db import (
     get_user_by_field,
 )
 from api.model.enums.book_genre import BookGenre
-from api.model.book import BookForm, Book, BookMini
+from api.model.book import BookForm, Book, BookMini, BookUpdate
 from api.model.review import Review, ReviewForm
 from api.model.rating import Rating, RatingForm
 from api.model.user import User
@@ -77,6 +77,39 @@ def create_book(book_form: BookForm, session: Session = Depends(get_session)):
     session.commit()
     session.refresh(book)
     return book
+
+
+@router.put("/books/{book_id}")
+def edit_book(
+    book_id: int,
+    book_form: BookUpdate,
+    session: Session = Depends(get_session),
+    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
+):
+    book = get_book_by_id(book_id, session)
+    user = get_user_by_field("id", auth, session)
+    if user.id != book.author.id:
+        raise HTTPException(
+            status_code=401,
+            detail="You must be the author of the book to edit it",
+        )
+
+    book_with_same_title = session.exec(
+        select(Book).where(Book.title == book_form.title)
+    ).first()
+    if book_with_same_title and book_with_same_title.id != book.id:
+        raise HTTPException(
+            status_code=403,
+            detail="Title already taken by another book",
+        )
+
+    update_data = book_form.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(book, key, value)
+
+    session.commit()
+    session.refresh(book)
+    return BookFormatter.format_for_user(book, user)
 
 
 @router.get("/books/{book_id}/reviews")
@@ -165,8 +198,6 @@ def get_recommended_books(
     auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
     session: Session = Depends(get_session),
 ):
-    user = get_user_by_field("id", auth, session)
-
     final_list = []
     rated_books = get_rated_books_by_user_id(auth, session)
     if rated_books:

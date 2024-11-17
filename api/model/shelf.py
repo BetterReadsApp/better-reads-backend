@@ -22,6 +22,9 @@ class Shelf(ShelfForm, table=True):
     def contains(self, book):
         return book in self.books
 
+    def delete(self, book):
+        self.books.remove(book)
+
 
 class ShelfMini(SQLModel):
     id: int

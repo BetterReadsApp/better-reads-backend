@@ -52,3 +52,12 @@ class BookMini(SQLModel):
     genre: BookGenre
     publication_date: date
     cover_image_url: Optional[str]
+
+
+class BookUpdate(SQLModel):
+    title: str
+    summary: str
+    genre: BookGenre
+    pages: int
+    publication_date: date
+    cover_image_url: Optional[str]

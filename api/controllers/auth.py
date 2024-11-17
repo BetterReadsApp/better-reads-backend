@@ -9,6 +9,7 @@ import re
 router = APIRouter(tags=["Auth"])
 EMAIL_REGEX = re.compile(r"^[\w\.-]+@[\w-]+\.[\w-]{2,}$")
 MIN_PASSWORD_LENGTH = 8
+DEFAULT_AVATAR = "https://api.dicebear.com/9.x/adventurer/svg?seed=Alexander"
 
 
 @router.post("/login")
@@ -39,6 +40,7 @@ def register_user(user_form: UserFormRegister, session: Session = Depends(get_se
     )
     user.password = hashed_password.decode("utf-8")
     user.is_author = user_form.is_author
+    user.avatar_image_url = DEFAULT_AVATAR
     user.set_default_shelves()
 
     session.add(user)
