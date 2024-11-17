@@ -1,12 +1,19 @@
 from fastapi import APIRouter, Depends, Header, HTTPException, Path, Query
 from sqlmodel import Session
-from api.db import get_session, get_user_by_field, get_users_by_name_and_last_name
+from api.controllers.auth import EMAIL_REGEX
+from api.db import get_session, get_user_by_field, get_users_by_name_and_last_name, user_exists_by_field
+from api.model.enums.avatar import Avatar
 from api.model.user import UserMini, UserUpdate
 from api.formatters.user_formatter import UserFormatter
-from typing import Annotated
+from typing import Annotated, List
 
 router = APIRouter(prefix="/users", tags=["Users"])
 AUTH_HEADER_DESCRIPTION = "Id del usuario **logeado actualmente**"
+
+
+@router.get("/avatars", response_model=List[str])
+def get_avatar_options():
+    return [avatar.value for avatar in Avatar]
 
 
 @router.get("", response_model=list[UserMini])
@@ -74,6 +81,7 @@ def unfollow_user(
     session.commit()
     return {"detail": "User unfollowed successfully"}
 
+
 @router.put("/{user_id}")
 def edit_user_profile(
     new_user: UserUpdate,
@@ -82,8 +90,22 @@ def edit_user_profile(
     ):
     user = get_user_by_field("id", auth, session)
 
+    if not EMAIL_REGEX.match(new_user.email):
+        raise HTTPException(status_code=400, detail="Email domain is not allowed")
+    if user_exists_by_field("email", new_user.email, session) and new_user.email != user.email:
+        raise HTTPException(status_code=400, detail="Email is already in use")
+    
+    if user.is_author and not new_user.is_author:
+        raise HTTPException(status_code=409, detail="You cannot stop being an author")
+    
+    if new_user.avatar_image_url not in [avatar.value for avatar in Avatar]:
+        raise HTTPException(status_code=400, detail="Invalid avatar URL")
+
     user.name = new_user.name
     user.last_name = new_user.last_name
+    user.email = new_user.email
+    user.is_author = new_user.is_author
+    user.avatar_image_url = new_user.avatar_image_url
 
     session.commit()
     session.refresh(user)

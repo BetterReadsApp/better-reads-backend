@@ -48,6 +48,9 @@ class User(UserFormRegister, table=True):
             "secondaryjoin": "User.id==Following.following_id",
         },
     )
+    avatar_image_url: Optional[str] = Field(
+        default=None, description="URL for the user's avatar"
+    )
 
     def follow(self, user):
         self.following.append(user)
@@ -73,6 +76,7 @@ class UserMini(SQLModel):
     id: int
     name: str
     last_name: str
+    avatar_image_url: Optional[str]
 
 
 class UserPrivate(UserBase):
@@ -134,3 +138,6 @@ class UserPublic(UserMini):
 class UserUpdate(SQLModel):
     name: str
     last_name: str
+    email: str
+    is_author: bool
+    avatar_image_url: Optional[str]
