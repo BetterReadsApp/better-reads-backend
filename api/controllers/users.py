@@ -16,11 +16,6 @@ router = APIRouter(prefix="/users", tags=["Users"])
 AUTH_HEADER_DESCRIPTION = "Id del usuario **logeado actualmente**"
 
 
-@router.get("/avatars", response_model=List[str])
-def get_avatar_options():
-    return [avatar.value for avatar in Avatar]
-
-
 @router.get("", response_model=list[UserMini])
 def get_users(
     name: str = Query(None, description="Nombre del usuario **que quiero obtener**"),
