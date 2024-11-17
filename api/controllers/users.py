@@ -1,7 +1,12 @@
 from fastapi import APIRouter, Depends, Header, HTTPException, Path, Query
 from sqlmodel import Session
 from api.controllers.auth import EMAIL_REGEX
-from api.db import get_session, get_user_by_field, get_users_by_name_and_last_name, user_exists_by_field
+from api.db import (
+    get_session,
+    get_user_by_field,
+    get_users_by_name_and_last_name,
+    user_exists_by_field,
+)
 from api.model.enums.avatar import Avatar
 from api.model.user import UserMini, UserUpdate
 from api.formatters.user_formatter import UserFormatter
@@ -87,17 +92,20 @@ def edit_user_profile(
     new_user: UserUpdate,
     session: Session = Depends(get_session),
     auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
-    ):
+):
     user = get_user_by_field("id", auth, session)
 
     if not EMAIL_REGEX.match(new_user.email):
         raise HTTPException(status_code=400, detail="Email domain is not allowed")
-    if user_exists_by_field("email", new_user.email, session) and new_user.email != user.email:
+    if (
+        user_exists_by_field("email", new_user.email, session)
+        and new_user.email != user.email
+    ):
         raise HTTPException(status_code=400, detail="Email is already in use")
-    
+
     if user.is_author and not new_user.is_author:
         raise HTTPException(status_code=409, detail="You cannot stop being an author")
-    
+
     if new_user.avatar_image_url not in [avatar.value for avatar in Avatar]:
         raise HTTPException(status_code=400, detail="Invalid avatar URL")
 

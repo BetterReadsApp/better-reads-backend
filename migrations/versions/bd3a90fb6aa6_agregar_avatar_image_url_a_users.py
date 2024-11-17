@@ -5,16 +5,17 @@ Revises: b4aed2caa488
 Create Date: 2024-11-17 11:27:20.541955
 
 """
+
 from typing import Sequence, Union
+from api.model.enums.avatar import Avatar
 
 from alembic import op
 import sqlalchemy as sa
-import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'bd3a90fb6aa6'
-down_revision: Union[str, None] = 'b4aed2caa488'
+revision: str = "bd3a90fb6aa6"
+down_revision: Union[str, None] = "b4aed2caa488"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -25,7 +26,8 @@ def upgrade() -> None:
         sa.Column(
             "avatar_image_url",
             sa.String(300),
-            nullable=True,
+            nullable=False,
+            server_default=Avatar.KIMBERLY.value,
         ),
     )
 

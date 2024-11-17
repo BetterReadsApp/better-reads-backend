@@ -82,10 +82,10 @@ def create_book(book_form: BookForm, session: Session = Depends(get_session)):
 @router.put("/books/{book_id}")
 def edit_book(
     book_id: int,
-    book_form: BookUpdate, 
+    book_form: BookUpdate,
     session: Session = Depends(get_session),
     auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
-    ):
+):
     book = get_book_by_id(book_id, session)
     user = get_user_by_field("id", auth, session)
     if user.id != book.author.id:
@@ -93,14 +93,16 @@ def edit_book(
             status_code=401,
             detail="You must be the author of the book to edit it",
         )
-    
-    book_with_same_title = session.exec(select(Book).where(Book.title == book_form.title)).first()
+
+    book_with_same_title = session.exec(
+        select(Book).where(Book.title == book_form.title)
+    ).first()
     if book_with_same_title:
         raise HTTPException(
             status_code=403,
             detail="Title already taken by another book",
         )
-    
+
     update_data = book_form.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(book, key, value)

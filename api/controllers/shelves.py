@@ -67,14 +67,14 @@ def delete_shelf(
     auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
 ):
     shelf = find_shelf(session, shelf_id)
-    verify_user(shelf.user_id, auth, "You cannot remove a book from a shelf that's not yours")
+    verify_user(
+        shelf.user_id, auth, "You cannot remove a book from a shelf that's not yours"
+    )
 
     not_editable = ["To Read", "Currently Reading", "Read"]
     if shelf.name in not_editable:
-        raise HTTPException(
-            status_code=403, detail="You cannot delete a default shelf"
-        )
-    
+        raise HTTPException(status_code=403, detail="You cannot delete a default shelf")
+
     session.delete(shelf)
     session.commit()
     return {"detail": "Shelf removed succesfully"}
@@ -99,7 +99,9 @@ def add_book_to_shelf(
     auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
 ):
     shelf = find_shelf(session, shelf_id)
-    verify_user(shelf.user_id, auth, "You cannot add a book to a shelf that's not yours")
+    verify_user(
+        shelf.user_id, auth, "You cannot add a book to a shelf that's not yours"
+    )
 
     book = get_book_by_id(book_to_shelf_form.book_id, session)
     if shelf.contains(book):
@@ -122,14 +124,16 @@ def delete_book_from_shelf(
     auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
 ):
     shelf = find_shelf(session, shelf_id)
-    verify_user(shelf.user_id, auth, "You cannot remove a book from a shelf that's not yours")
+    verify_user(
+        shelf.user_id, auth, "You cannot remove a book from a shelf that's not yours"
+    )
 
     book = get_book_by_id(book_to_shelf_form.book_id, session)
     if not shelf.contains(book):
         raise HTTPException(
             status_code=403, detail="The book doesn't belong to that shelf"
         )
-    
+
     shelf.delete(book)
     session.add(shelf)
     session.commit()
@@ -142,16 +146,16 @@ def edit_shelf(
     new_shelf: ShelfForm,
     session: Session = Depends(get_session),
     auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
-    ):
+):
     shelf = find_shelf(session, shelf_id)
     verify_user(shelf.user_id, auth, "You cannot edit a shelf that's not yours")
-    
+
     not_editable = ["To Read", "Currently Reading", "Read"]
     if new_shelf.name in not_editable or shelf.name in not_editable:
         raise HTTPException(
             status_code=403, detail="You cannot use or edit a default shelf's name"
         )
-    
+
     shelf.name = new_shelf.name
     session.commit()
     session.refresh(shelf)
@@ -160,10 +164,9 @@ def edit_shelf(
 
 def verify_user(id, auth, error):
     if id != auth:
-        raise HTTPException(
-            status_code=403, detail=error
-        )
-    
+        raise HTTPException(status_code=403, detail=error)
+
+
 def find_shelf(session, shelf_id):
     shelf = session.exec(select(Shelf).where(Shelf.id == shelf_id)).first()
     if not shelf:
