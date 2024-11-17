@@ -97,7 +97,7 @@ def edit_book(
     book_with_same_title = session.exec(
         select(Book).where(Book.title == book_form.title)
     ).first()
-    if book_with_same_title:
+    if book_with_same_title and book_with_same_title.id != book.id:
         raise HTTPException(
             status_code=403,
             detail="Title already taken by another book",
