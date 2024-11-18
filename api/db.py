@@ -44,7 +44,7 @@ def get_users_by_name_and_last_name(name: str, last_name: str, session: Session)
 
 
 def get_book_by_id(book_id: int, session: Session):
-    query = select(Book).where(Book.id == book_id)
+    query = select(Book).where(Book.id == book_id).where(Book.is_active == True)
     book = session.exec(query).first()
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
@@ -67,7 +67,7 @@ def user_exists_by_field(field_name: str, value: str, session: Session) -> bool:
 
 
 def get_rated_books_by_user_id(user_id: int, session: Session):
-    query = select(Book).join(Book.ratings).where(Rating.user_id == user_id)
+    query = select(Book).where(Book.is_active == True).join(Book.ratings).where(Rating.user_id == user_id)
     return session.exec(query).all()
 
 
@@ -76,13 +76,17 @@ def get_read_books_by_user_id(user_id: int, session: Session):
     shelf = session.exec(query).first()
     if not shelf:
         return []
-    return shelf.books
+    active_books = []
+    for book in shelf.books:
+        if book.is_active:
+            active_books.append(book)
+    return active_books
 
 
 def get_books_by_authors(books: list[Book], session: Session):
     new_books = []
     for book in books:
-        query = select(Book).where(Book.author == book.author)
+        query = select(Book).where(Book.author == book.author).where(Book.is_active == True)
         new_books.extend(session.exec(query).all())
     return new_books
 
@@ -90,7 +94,7 @@ def get_books_by_authors(books: list[Book], session: Session):
 def get_books_by_genre(books: list[Book], session: Session):
     new_books = []
     for book in books:
-        query = select(Book).where(Book.genre == book.genre)
+        query = select(Book).where(Book.genre == book.genre).where(Book.is_active == True)
         new_books.extend(session.exec(query).all())
     return new_books
 

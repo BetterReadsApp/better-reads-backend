@@ -35,7 +35,7 @@ def get_books(
     genre: BookGenre = Query(None, description="**Género**"),
     session: Session = Depends(get_session),
 ):
-    query = select(Book)
+    query = select(Book).where(Book.is_active == True)
     if keywords:
         query = query.join(Book.author).where(
             or_(
@@ -79,6 +79,31 @@ def create_book(book_form: BookForm, session: Session = Depends(get_session)):
     return book
 
 
+@router.delete("/books/{book_id}")
+def delete_book(
+    book_id: int,
+    session: Session = Depends(get_session),
+    auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
+):
+    book = get_book_by_id(book_id, session)
+    user = get_user_by_field("id", auth, session)
+    if not book.is_active:
+        raise HTTPException(
+            status_code=401,
+            detail="Book not found",
+        )
+    if user.id != book.author.id:
+        raise HTTPException(
+            status_code=401,
+            detail="You must be the author of the book to delete it",
+        )
+    
+    book.is_active = False
+    session.commit()
+    session.refresh(book)
+    return {"detail": "Book deleted succesfully"}
+
+
 @router.put("/books/{book_id}")
 def edit_book(
     book_id: int,
@@ -95,7 +120,7 @@ def edit_book(
         )
 
     book_with_same_title = session.exec(
-        select(Book).where(Book.title == book_form.title)
+        select(Book).where(Book.title == book_form.title).where(Book.is_active == True)
     ).first()
     if book_with_same_title and book_with_same_title.id != book.id:
         raise HTTPException(

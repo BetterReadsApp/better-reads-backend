@@ -34,6 +34,7 @@ class Book(BookForm, table=True):
     shelves: List["Shelf"] = Relationship(
         back_populates="books", link_model=BookShelfLink
     )
+    is_active: bool = Field(default=True, nullable=False)
 
     def __eq__(self, other):
         return self.id == other.id
