@@ -146,7 +146,7 @@ def answer_quiz(
 
     if user.id == quiz.book.author_id:
         raise HTTPException(
-            status_code=401,
+            status_code=403,
             detail="You cannot answer your own quiz",
         )
 

@@ -279,6 +279,6 @@ def filter_by_rating(books: list[Book], user_id: int):
 def compare_user_and_author(user_id: int, author_id: int, err_msg: str):
     if user_id == author_id:
         raise HTTPException(
-            status_code=401,
+            status_code=403,
             detail=err_msg,
         )
