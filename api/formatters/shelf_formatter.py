@@ -6,7 +6,8 @@ class ShelfFormatter:
     def format_for_user(shelf, user):
         shelf_dict = shelf.__dict__
         shelf_dict_books = []
-        for book in shelf.books:
+        active_books = [book for book in shelf.books if book.is_active]
+        for book in active_books:
             book_dict = book.__dict__
             book_dict["total_ratings"] = len(book.ratings)
             if user:

@@ -16,7 +16,6 @@ class UserFormatter:
         user_dict["rated_books"] = cls.format_ratings(user.rated_books)
         user_dict["reviewed_books"] = cls.format_reviews(user.reviewed_books)
         user_dict.pop("password")
-        user_dict.pop("email")
         return user_dict
 
     @classmethod
