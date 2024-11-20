@@ -72,6 +72,16 @@ def create_book(book_form: BookForm, session: Session = Depends(get_session)):
         raise HTTPException(
             status_code=403, detail="You must be an author to create a book"
         )
+    
+    book_with_same_title = session.exec(
+        select(Book).where(Book.title == book_form.title).where(Book.is_active == True)
+    ).first()
+    if book_with_same_title:
+        raise HTTPException(
+            status_code=403,
+            detail="Title already taken by another book",
+        )
+
     book = Book.model_validate(book_form)
     session.add(book)
     session.commit()
