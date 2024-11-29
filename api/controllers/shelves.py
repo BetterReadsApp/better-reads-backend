@@ -148,10 +148,10 @@ def add_book_to_shelf(
     return shelf
 
 
-@router.delete("/{shelf_id}/books")
+@router.delete("/{shelf_id}/books/{book_id}")
 def delete_book_from_shelf(
     shelf_id: int,
-    book_to_shelf_form: BookToShelfForm,
+    book_id: int,
     session: Session = Depends(get_session),
     auth: Annotated[int, Header(description=AUTH_HEADER_DESCRIPTION)] = None,
 ):
@@ -160,7 +160,7 @@ def delete_book_from_shelf(
         shelf.user_id, auth, "You cannot remove a book from a shelf that's not yours"
     )
 
-    book = get_book_by_id(book_to_shelf_form.book_id, session)
+    book = get_book_by_id(book_id, session)
     if not shelf.contains(book):
         raise HTTPException(
             status_code=403, detail="The book doesn't belong to that shelf"
