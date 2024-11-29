@@ -67,7 +67,12 @@ def user_exists_by_field(field_name: str, value: str, session: Session) -> bool:
 
 
 def get_rated_books_by_user_id(user_id: int, session: Session):
-    query = select(Book).where(Book.is_active == True).join(Book.ratings).where(Rating.user_id == user_id)
+    query = (
+        select(Book)
+        .where(Book.is_active == True)
+        .join(Book.ratings)
+        .where(Rating.user_id == user_id)
+    )
     return session.exec(query).all()
 
 
@@ -86,7 +91,9 @@ def get_read_books_by_user_id(user_id: int, session: Session):
 def get_books_by_authors(books: list[Book], session: Session):
     new_books = []
     for book in books:
-        query = select(Book).where(Book.author == book.author).where(Book.is_active == True)
+        query = (
+            select(Book).where(Book.author == book.author).where(Book.is_active == True)
+        )
         new_books.extend(session.exec(query).all())
     return new_books
 
@@ -94,7 +101,9 @@ def get_books_by_authors(books: list[Book], session: Session):
 def get_books_by_genre(books: list[Book], session: Session):
     new_books = []
     for book in books:
-        query = select(Book).where(Book.genre == book.genre).where(Book.is_active == True)
+        query = (
+            select(Book).where(Book.genre == book.genre).where(Book.is_active == True)
+        )
         new_books.extend(session.exec(query).all())
     return new_books
 

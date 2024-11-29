@@ -72,7 +72,7 @@ def create_book(book_form: BookForm, session: Session = Depends(get_session)):
         raise HTTPException(
             status_code=403, detail="You must be an author to create a book"
         )
-    
+
     book_with_same_title = session.exec(
         select(Book).where(Book.title == book_form.title).where(Book.is_active == True)
     ).first()
@@ -107,7 +107,7 @@ def delete_book(
             status_code=401,
             detail="You must be the author of the book to delete it",
         )
-    
+
     book.is_active = False
     session.commit()
     session.refresh(book)
@@ -163,7 +163,7 @@ def review_book(
     user = get_user_by_field("id", auth, session)
     book = get_book_by_id(book_id, session)
     compare_user_and_author(user.id, book.author.id, "You cannot review your own book")
-    
+
     query = (
         select(Review).where(Review.user_id == user.id).where(Review.book_id == book.id)
     )
@@ -197,7 +197,7 @@ def rate_book(
     user = get_user_by_field("id", auth, session)
     book = get_book_by_id(book_id, session)
     compare_user_and_author(user.id, book.author.id, "You cannot rate your own book")
-    
+
     query = (
         select(Rating).where(Rating.user_id == user.id).where(Rating.book_id == book.id)
     )
@@ -275,6 +275,7 @@ def filter_by_rating(books: list[Book], user_id: int):
             rating.user_id == user_id and rating.value >= 3 for rating in book.ratings
         )
     ]
+
 
 def compare_user_and_author(user_id: int, author_id: int, err_msg: str):
     if user_id == author_id:

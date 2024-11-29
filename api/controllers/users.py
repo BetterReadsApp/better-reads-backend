@@ -10,7 +10,7 @@ from api.db import (
 from api.model.enums.avatar import Avatar
 from api.model.user import UserMini, UserUpdate
 from api.formatters.user_formatter import UserFormatter
-from typing import Annotated, List
+from typing import Annotated
 
 router = APIRouter(prefix="/users", tags=["Users"])
 AUTH_HEADER_DESCRIPTION = "Id del usuario **logeado actualmente**"
